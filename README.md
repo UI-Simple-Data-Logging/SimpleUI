@@ -8,8 +8,11 @@ A full-stack MERN app for logging sensor items with values and timestamps. Built
 
 - ✅ Add, edit, and delete sensor items
 - 🕒 Automatically generates timestamp on creation
+- ♻️ Instant UI update without full reload
+- 🔔 Toast notifications for actions and errors
 - 🌐 Connected to MongoDB Atlas (cloud database)
 - 🎨 Beautiful responsive UI using Tailwind CSS
+- 🔄 Loading spinner feedback during async actions
 
 ---
 
