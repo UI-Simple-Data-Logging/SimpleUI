@@ -1,34 +1,44 @@
-// frontend/src/components/ItemManager.js
+// src/components/ItemManager.js
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import ItemForm from './ItemForm';
+import ItemList from './ItemList';
 
-const API_URL = '/api/items'; // ✅ Relative path uses the proxy in package.json
+const API_URL = '/api/items';
 
 function ItemManager() {
   const [items, setItems] = useState([]);
-  const [newItem, setNewItem] = useState('');
-  const [editItem, setEditItem] = useState({ id: '', name: '' });
+  const [currentItem, setCurrentItem] = useState({ name: '', value: '', id: '' });
 
   const fetchItems = async () => {
     const res = await axios.get(API_URL);
     setItems(res.data);
   };
 
-  const createItem = async () => {
-    if (!newItem.trim()) return;
-    await axios.post(API_URL, { name: newItem });
-    setNewItem('');
+  const handleCreateOrUpdate = async () => {
+    if (!currentItem.name.trim() || !currentItem.value.trim()) return;
+
+    if (currentItem.id) {
+      await axios.put(`${API_URL}/${currentItem.id}`, {
+        name: currentItem.name,
+        value: currentItem.value,
+      });
+    } else {
+      await axios.post(API_URL, {
+        name: currentItem.name,
+        value: currentItem.value,
+      });
+    }
+
+    setCurrentItem({ name: '', value: '', id: '' });
     fetchItems();
   };
 
-  const updateItem = async () => {
-    if (!editItem.name.trim()) return;
-    await axios.put(`${API_URL}/${editItem.id}`, { name: editItem.name });
-    setEditItem({ id: '', name: '' });
-    fetchItems();
+  const handleEdit = (item) => {
+    setCurrentItem({ name: item.name, value: item.value, id: item._id });
   };
 
-  const deleteItem = async (id) => {
+  const handleDelete = async (id) => {
     await axios.delete(`${API_URL}/${id}`);
     fetchItems();
   };
@@ -38,35 +48,15 @@ function ItemManager() {
   }, []);
 
   return (
-    <div>
-      <h2>Sensor Item Manager</h2>
-
-      <input
-        placeholder="New item name"
-        value={newItem}
-        onChange={(e) => setNewItem(e.target.value)}
+    <div className="max-w-2xl mx-auto mt-10 p-6 bg-gray-50 rounded shadow">
+      <h1 className="text-2xl font-bold text-center mb-6">📋 Sensor Item Manager</h1>
+      <ItemForm
+        item={currentItem}
+        setItem={setCurrentItem}
+        onSubmit={handleCreateOrUpdate}
+        isEditing={!!currentItem.id}
       />
-      <button onClick={createItem}>Add</button>
-
-      {editItem.id && (
-        <>
-          <input
-            value={editItem.name}
-            onChange={(e) => setEditItem({ ...editItem, name: e.target.value })}
-          />
-          <button onClick={updateItem}>Update</button>
-        </>
-      )}
-
-      <ul>
-        {items.map((item) => (
-          <li key={item._id}>
-            {item.name}{' '}
-            <button onClick={() => setEditItem({ id: item._id, name: item.name })}>Edit</button>
-            <button onClick={() => deleteItem(item._id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
+      <ItemList items={items} onEdit={handleEdit} onDelete={handleDelete} />
     </div>
   );
 }
