@@ -1,30 +1,27 @@
-// src/components/ItemManager.js
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { getItems, createItem, updateItem, deleteItem } from '../utils/api';
 import ItemForm from './ItemForm';
 import ItemList from './ItemList';
-
-const API_URL = '/api/items';
 
 function ItemManager() {
   const [items, setItems] = useState([]);
   const [currentItem, setCurrentItem] = useState({ name: '', value: '', id: '' });
 
   const fetchItems = async () => {
-    const res = await axios.get(API_URL);
-    setItems(res.data);
+    const data = await getItems();
+    setItems(data);
   };
 
   const handleCreateOrUpdate = async () => {
     if (!currentItem.name.trim() || !currentItem.value.trim()) return;
 
     if (currentItem.id) {
-      await axios.put(`${API_URL}/${currentItem.id}`, {
+      await updateItem(currentItem.id, {
         name: currentItem.name,
         value: currentItem.value,
       });
     } else {
-      await axios.post(API_URL, {
+      await createItem({
         name: currentItem.name,
         value: currentItem.value,
       });
@@ -39,7 +36,7 @@ function ItemManager() {
   };
 
   const handleDelete = async (id) => {
-    await axios.delete(`${API_URL}/${id}`);
+    await deleteItem(id);
     fetchItems();
   };
 
