@@ -1,30 +1,83 @@
 # 🧪 Simple Data Logging UI
 
-A MERN-stack sensor data logging app with a responsive UI, MongoDB backend, and Tailwind CSS for styling.
+A full-stack MERN app for logging sensor items with values and timestamps. Built with React, Express, MongoDB Atlas, and styled using Tailwind CSS.
+
+---
 
 ## 🚀 Features
 
-- 📋 Add, edit, delete items
-- 📅 Auto timestamp generation
-- 🎨 Styled with Tailwind CSS
-- 🌐 MongoDB Atlas + Express backend
+- ✅ Add, edit, and delete sensor items
+- 🕒 Automatically generates timestamp on creation
+- 🌐 Connected to MongoDB Atlas (cloud database)
+- 🎨 Beautiful responsive UI using Tailwind CSS
 
-## 🏗️ Stack
+---
 
-- Frontend: React + Tailwind CSS
-- Backend: Express + MongoDB (Atlas)
-- Axios for HTTP requests
+## 🏗️ Tech Stack
 
-## 📦 Setup
+| Layer       | Tech                           |
+|-------------|--------------------------------|
+| Frontend    | React, Tailwind CSS            |
+| Backend     | Node.js, Express               |
+| Database    | MongoDB Atlas                  |
+| HTTP Client | Axios                          |
+
+---
+
+## 📦 Setup Instructions
 
 ```bash
-# Install dependencies
-cd frontend
+# 1. Clone the repository
+git clone https://github.com/UI-Simple-Data-Logging/SimpleUI.git
+cd SimpleUI
+```
+
+### 🛠️ Backend Setup
+
+```bash
+cd backend
 npm install
 
-cd ../backend
+# Create a .env file based on the provided example
+cp .env.example .env
+
+# Start backend server
+npm run dev
+```
+
+### 💻 Frontend Setup
+
+```bash
+cd ../frontend
 npm install
 
-# Start dev servers
-npm run dev   # backend
-npm start     # frontend
+# Create a .env file for React
+cp .env.example .env
+
+# Start frontend
+npm start
+```
+
+---
+
+## 🗂️ Environment Variables
+
+### 📍 `frontend/.env.example`
+
+```env
+REACT_APP_API_BASE_URL=http://localhost:5050/api
+```
+
+### 📍 `backend/.env.example`
+
+```env
+MONGO_URI=your_mongodb_connection_string
+PORT=5050
+```
+
+---
+
+## 📸 Preview
+
+> Add a screenshot here later:
+> `![UI Preview](./screenshots/preview.png)`
