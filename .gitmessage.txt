@@ -1,0 +1,15 @@
+# Commit Message Template
+
+<type>(scope): <short summary>
+
+# example: feat(ItemForm): add form validation and timestamp formatting
+
+# Types:
+#   feat     – new feature
+#   fix      – bug fix
+#   docs     – documentation changes
+#   style    – formatting (no logic)
+#   refactor – code improvement
+#   chore    – tooling, infra
+
+# Leave lines starting with # out of your commit.
