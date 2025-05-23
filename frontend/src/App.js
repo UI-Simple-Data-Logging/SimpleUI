@@ -2,6 +2,8 @@ import React from 'react';
 import './index.css'; // Tailwind
 import './App.css';   // Custom global styles
 import ItemManager from './components/ItemManager';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
@@ -11,6 +13,7 @@ function App() {
           🔧 Simple Data Logging UI
         </h1>
         <ItemManager />
+        <ToastContainer position="top-right" autoClose={3000} />
       </div>
     </div>
   );

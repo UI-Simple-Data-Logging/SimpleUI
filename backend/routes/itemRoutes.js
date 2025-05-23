@@ -25,11 +25,18 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Update
 router.put('/:id', async (req, res) => {
   try {
-    const updated = await Item.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    res.status(200).json(updated);
+    const existing = await Item.findById(req.params.id);
+    if (!existing) return res.status(404).json({ message: 'Item not found' });
+
+    existing.name = req.body.name;
+    existing.value = req.body.value;
+    existing.timestamp = Date.now(); // 👈 update timestamp on edit
+    // Preserve original timestamp
+    await existing.save();
+
+    res.status(200).json(existing);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
