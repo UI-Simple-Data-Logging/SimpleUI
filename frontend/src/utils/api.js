@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const BASE = process.env.REACT_APP_API_BASE_URL;
+const BASE = 'http://localhost:5050/api';
 
 export const getItems = async () => {
   const res = await axios.get(`${BASE}/items`);

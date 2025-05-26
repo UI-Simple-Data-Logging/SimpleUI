@@ -1,5 +1,5 @@
 {
-  "name": "frontend",
+  "name": "clean-ui",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -38,11 +38,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:5050",
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.1.7",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.3",
+    "autoprefixer": "^10.4.14",
+    "postcss": "^8.4.24",
     "tailwindcss": "^3.4.1"
   }
 }
