@@ -27,9 +27,20 @@ function ItemManager() {
       return;
     }
 
+    // Check for duplicate names
+    const nameExists = items.some(item => 
+      item.name.toLowerCase() === currentItem.name.trim().toLowerCase() && 
+      item._id !== currentItem.id
+    );
+
+    if (nameExists) {
+      toast.warn('An item with this name already exists!');
+      return;
+    }
+
     try {
       setLoading(true);
-
+      
       if (currentItem.id) {
         const updated = await updateItem(currentItem.id, {
           name: currentItem.name,
