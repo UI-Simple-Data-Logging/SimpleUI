@@ -7,8 +7,9 @@ import autoTable from 'jspdf-autotable';
 function ItemList({ items, onEdit, onDelete }) {
   // Download as CSV
   const downloadCSV = () => {
-    const headers = ['Name', 'Value', 'Timestamp'];
+    const headers = ['ID','Name', 'Value', 'Timestamp'];
     const csvData = items.map(item => [
+      item._id,
       item.name,
       item.value,
       new Date(item.timestamp).toLocaleString()
@@ -26,6 +27,7 @@ function ItemList({ items, onEdit, onDelete }) {
   const downloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(
       items.map(item => ({
+        ID: item._id,
         Name: item.name,
         Value: item.value,
         Timestamp: new Date(item.timestamp).toLocaleString()
@@ -42,20 +44,21 @@ function ItemList({ items, onEdit, onDelete }) {
     const doc = new jsPDF();
 
     const tableData = items.map(item => [
+      item._id,
       item.name,
       item.value,
       new Date(item.timestamp).toLocaleString()
     ]);
 
     autoTable(doc, {
-      head: [['Name', 'Value', 'Timestamp']],
+      head: [['ID','Name', 'Value', 'Timestamp']],
       body: tableData,
       startY: 20,
       styles: { fontSize: 10 },
       headStyles: { fillColor: [64, 64, 64] }
     });
 
-    doc.save('items.pdf');
+    doc.save('Items.pdf');
   };
 
   return (
