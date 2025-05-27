@@ -1,8 +1,8 @@
 import React from 'react';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 function ItemList({ items, onEdit, onDelete }) {
   // Download as CSV
@@ -40,21 +40,21 @@ function ItemList({ items, onEdit, onDelete }) {
   // Download as PDF
   const downloadPDF = () => {
     const doc = new jsPDF();
-    
+
     const tableData = items.map(item => [
       item.name,
       item.value,
       new Date(item.timestamp).toLocaleString()
     ]);
-    
-    doc.autoTable({
+
+    autoTable(doc, {
       head: [['Name', 'Value', 'Timestamp']],
       body: tableData,
       startY: 20,
       styles: { fontSize: 10 },
       headStyles: { fillColor: [64, 64, 64] }
     });
-    
+
     doc.save('items.pdf');
   };
 
