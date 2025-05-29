@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getItems, createItem, updateItem, deleteItem } from '../utils/api';
 import ItemForm from './ItemForm';
 import ItemList from './ItemList';
+import ButtonSensor from './ButtonSensor';
 import { toast } from 'react-toastify';
 
 function ItemManager() {
@@ -109,6 +110,10 @@ function ItemManager() {
         onSubmit={handleCreateOrUpdate}
         isEditing={!!currentItem.id}
       />
+      
+      {/* Add ButtonSensor component */}
+      <ButtonSensor items={items} />
+      
       <ItemList items={items} onEdit={handleEdit} onDelete={handleDelete} />
     </div>
   );
