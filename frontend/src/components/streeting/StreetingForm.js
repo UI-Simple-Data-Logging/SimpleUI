@@ -1,72 +1,131 @@
 import React, { useState } from 'react';
 
+const DEVICE_OPTIONS = ['encoder', 'thermometer', 'manual'];
+const METRIC_OPTIONS = ['Voids', 'Conductivity', 'Thickness'];
+
 function StreetingForm({ onSubmit, loading }) {
   const [formData, setFormData] = useState({
     temperature: '',
-    speed: ''
+    speed: '',
+    deviceSource: 'encoder',
+    priority: 'M',
+    targetMetricAffected: []
   });
+
+  const toggleMetric = (metric) => {
+    setFormData(prev => ({
+      ...prev,
+      targetMetricAffected: prev.targetMetricAffected.includes(metric)
+        ? prev.targetMetricAffected.filter(m => m !== metric)
+        : [...prev.targetMetricAffected, metric]
+    }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (!formData.temperature.trim() || !formData.speed.trim()) {
-      return;
-    }
-
     onSubmit(formData);
-    setFormData({ temperature: '', speed: '' });
+    setFormData(prev => ({
+      ...prev,
+      temperature: '',
+      speed: ''
+    }));
   };
 
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold mb-4">📝 Sensor Data Entry</h3>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Temperature */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            🌡️ Temperature *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">🌡️ Temperature *</label>
           <input
             type="number"
             step="0.1"
+            min="0"
             value={formData.temperature}
             onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
             placeholder="Enter temperature (°C)"
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="w-full p-2 border rounded"
             required
             disabled={loading}
           />
+          <p className="text-sm text-gray-500 mt-1">Unit: °C</p>
         </div>
 
+        {/* Speed */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            ⚡ Speed *
-          </label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">⚡ Speed *</label>
           <input
             type="number"
             step="0.1"
+            min="0"
             value={formData.speed}
             onChange={(e) => setFormData({ ...formData, speed: e.target.value })}
-            placeholder="Enter speed (km/h)"
-            className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Enter speed (mm/s)"
+            className="w-full p-2 border rounded"
             required
             disabled={loading}
           />
+          <p className="text-sm text-gray-500 mt-1">Unit: mm/s</p>
         </div>
-        
+
+        {/* Device Source */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Device Source</label>
+          <select
+            value={formData.deviceSource}
+            onChange={(e) => setFormData({ ...formData, deviceSource: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            {DEVICE_OPTIONS.map(opt => (
+              <option key={opt} value={opt}>{opt}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Priority */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+          <select
+            value={formData.priority}
+            onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+            className="w-full p-2 border rounded"
+          >
+            <option value="L">Low</option>
+            <option value="M">Medium</option>
+            <option value="H">High</option>
+          </select>
+        </div>
+
+        {/* Target Metrics Affected */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Target Metrics Affected</label>
+          <div className="flex flex-wrap gap-2">
+            {METRIC_OPTIONS.map(metric => (
+              <button
+                key={metric}
+                type="button"
+                className={`px-3 py-1 border rounded text-sm ${
+                  formData.targetMetricAffected.includes(metric)
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white text-gray-700 border-gray-300'
+                }`}
+                onClick={() => toggleMetric(metric)}
+              >
+                {metric}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Submit */}
         <button
           type="submit"
-          disabled={loading || !formData.temperature.trim() || !formData.speed.trim()}
-          className="w-full bg-blue-600 text-white py-3 px-4 rounded-md hover:bg-blue-700 transition duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading}
+          className="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 disabled:opacity-50"
         >
-          {loading ? (
-            <div className="flex items-center justify-center gap-2">
-              <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-              Submitting...
-            </div>
-          ) : (
-            'Submit Data'
-          )}
+          {loading ? 'Submitting...' : 'Submit Data'}
         </button>
       </form>
     </div>

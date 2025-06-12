@@ -16,10 +16,7 @@ function SilveringDashboard({ user, onLogout }) {
     try {
       if (showLoading) setLoading(true);
       const data = await getItems();
-      // Filter for silvering department data
-      const silveringData = data.filter(item => 
-        item.department === 'silvering' || !item.department
-      );
+      const silveringData = data.filter(item => item.processType === 'Silvering');
       setItems(silveringData);
       setLastUpdate(new Date());
     } catch (err) {
@@ -34,45 +31,57 @@ function SilveringDashboard({ user, onLogout }) {
     const interval = setInterval(() => {
       fetchItems(false);
     }, REFRESH_INTERVAL_SECONDS * 1000);
-
     return () => clearInterval(interval);
   }, []);
 
   const handleSubmit = async (formData) => {
+    const payload = {
+      processType: 'Silvering',
+      squeegeeSpeed: {
+        value: formData.squeegeeSpeed,
+        unit: 'mm/s',
+        deviceSource: formData.deviceSource
+      },
+      printPressure: {
+        value: formData.printPressure,
+        unit: 'N/m²',
+        deviceSource: formData.deviceSource
+      },
+      inkViscosity: {
+        value: formData.inkViscosity,
+        unit: 'cP',
+        deviceSource: formData.deviceSource
+      },
+      priority: formData.priority,
+      targetMetricAffected: formData.targetMetricAffected,
+      operator: user.username,
+      timestamp: new Date()
+    };
+
     try {
       setLoading(true);
-      const itemData = {
-        name: 'Silvering Value',
-        value: formData.value,
-        department: 'silvering',
-        username: user.username,
-        timestamp: new Date()
-      };
-
-      const result = await createItem(itemData);
-      setItems(prevItems => [result, ...prevItems]);
-      toast.success('Data submitted successfully!');
+      console.log('📦 Submitting grouped payload:', payload);
+      const result = await createItem(payload);
+      setItems(prev => [result, ...prev]);
+      toast.success('Silvering data submitted successfully!');
       setLastUpdate(new Date());
     } catch (err) {
-      toast.error('Failed to submit data');
+      console.error('❌ Submission failed:', err);
+      toast.error('Failed to submit silvering data');
     } finally {
       setLoading(false);
     }
   };
 
   const tableColumns = [
-    {
-      header: 'Value',
-      accessor: (item) => item.value
-    },
-    {
-      header: 'User',
-      accessor: (item) => item.username || 'Unknown'
-    },
-    {
-      header: 'Timestamp',
-      accessor: (item) => new Date(item.timestamp).toLocaleString()
-    }
+    { header: 'Squeegee Speed', accessor: (item) => item.squeegeeSpeed?.value + ' ' + item.squeegeeSpeed?.unit },
+    { header: 'Print Pressure', accessor: (item) => item.printPressure?.value + ' ' + item.printPressure?.unit },
+    { header: 'Ink Viscosity', accessor: (item) => item.inkViscosity?.value + ' ' + item.inkViscosity?.unit },
+    { header: 'Device Source', accessor: (item) => item.squeegeeSpeed?.deviceSource || 'N/A' },
+    { header: 'Priority', accessor: (item) => item.priority },
+    { header: 'Metrics Affected', accessor: (item) => (item.targetMetricAffected || []).join(', ') },
+    { header: 'Operator', accessor: (item) => item.operator || 'Unknown' },
+    { header: 'Timestamp', accessor: (item) => new Date(item.timestamp).toLocaleString() }
   ];
 
   return (
@@ -82,13 +91,13 @@ function SilveringDashboard({ user, onLogout }) {
         username={user.username} 
         onLogout={onLogout} 
       />
-      
+
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Form Section */}
           <div className="lg:col-span-1">
             <SilveringForm onSubmit={handleSubmit} loading={loading} />
-            
+
             {/* Status Info */}
             <div className="mt-4 bg-white rounded-lg shadow p-4">
               <h4 className="font-medium text-gray-700 mb-2">Status</h4>

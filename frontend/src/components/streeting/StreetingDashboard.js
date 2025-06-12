@@ -17,10 +17,7 @@ function StreetingDashboard({ user, onLogout }) {
     try {
       if (showLoading) setLoading(true);
       const data = await getItems();
-      // Filter for streeting department data
-      const streetingData = data.filter(item => 
-        item.department === 'streeting'
-      );
+      const streetingData = data.filter(item => item.processType === 'Streeting');
       setItems(streetingData);
       setLastUpdate(new Date());
     } catch (err) {
@@ -42,31 +39,26 @@ function StreetingDashboard({ user, onLogout }) {
   const handleSubmit = async (formData) => {
     try {
       setLoading(true);
-      
-      // Create two separate items for temp and speed
-      const tempItem = {
-        name: 'Temperature',
-        value: formData.temperature,
-        department: 'streeting',
-        username: user.username,
+
+      const payload = {
+        processType: 'Streeting',
+        temperature: {
+          value: parseFloat(formData.temperature),
+          unit: '°C',
+          deviceSource: 'thermometer'
+        },
+        speed: {
+          value: parseFloat(formData.speed),
+          unit: 'mm/s',
+          deviceSource: 'encoder'
+        },
+        operator: user.username,
         timestamp: new Date()
       };
 
-      const speedItem = {
-        name: 'Speed',
-        value: formData.speed,
-        department: 'streeting',
-        username: user.username,
-        timestamp: new Date()
-      };
-
-      const [tempResult, speedResult] = await Promise.all([
-        createItem(tempItem),
-        createItem(speedItem)
-      ]);
-
-      setItems(prevItems => [speedResult, tempResult, ...prevItems]);
-      toast.success('Temperature and Speed data submitted successfully!');
+      const result = await createItem(payload);
+      setItems(prev => [result, ...prev]);
+      toast.success('Streeting data submitted successfully!');
       setLastUpdate(new Date());
     } catch (err) {
       toast.error('Failed to submit data');
@@ -77,16 +69,16 @@ function StreetingDashboard({ user, onLogout }) {
 
   const tableColumns = [
     {
-      header: 'Parameter',
-      accessor: (item) => item.name
+      header: 'Temperature',
+      accessor: (item) => item.temperature?.value + ' ' + item.temperature?.unit
     },
     {
-      header: 'Value',
-      accessor: (item) => item.value
+      header: 'Speed',
+      accessor: (item) => item.speed?.value + ' ' + item.speed?.unit
     },
     {
-      header: 'User',
-      accessor: (item) => item.username || 'Unknown'
+      header: 'Operator',
+      accessor: (item) => item.operator || 'Unknown'
     },
     {
       header: 'Timestamp',
@@ -101,13 +93,13 @@ function StreetingDashboard({ user, onLogout }) {
         username={user.username} 
         onLogout={onLogout} 
       />
-      
+
       <div className="max-w-7xl mx-auto p-6">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           {/* Form Section */}
           <div className="xl:col-span-1">
             <StreetingForm onSubmit={handleSubmit} loading={loading} />
-            
+
             {/* Status Info */}
             <div className="mt-4 bg-white rounded-lg shadow p-4">
               <h4 className="font-medium text-gray-700 mb-2">Status</h4>
