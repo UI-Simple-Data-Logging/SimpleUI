@@ -6,13 +6,14 @@ import {
 function StreetingChart({ items }) {
   const chartData = items
     .filter(item => item.temperature?.value && item.speed?.value)
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)) // Sort by timestamp, newest first
+    .slice(0, 10) // Take the 10 most recent
     .map(item => ({
       timestamp: new Date(item.timestamp).toLocaleTimeString(),
       temperature: item.temperature.value,
       speed: item.speed.value
     }))
-    .reverse()
-    .slice(0, 10); // Last 10 data points (most recent first)
+    .reverse(); // Reverse for chronological order in chart (oldest to newest)
 
   if (chartData.length === 0) {
     return (
