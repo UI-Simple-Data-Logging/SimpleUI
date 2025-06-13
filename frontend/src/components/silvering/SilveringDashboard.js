@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import Header from '../common/Header';
 import DataTable from '../common/DataTable';
 import SilveringForm from './SilveringForm';
+import { PREDEFINED_CODES } from '../../utils/statusCodes';
 
 const REFRESH_INTERVAL_SECONDS = 5;
 
@@ -31,6 +32,7 @@ function SilveringDashboard({ user, onLogout }) {
     const interval = setInterval(() => {
       fetchItems(false);
     }, REFRESH_INTERVAL_SECONDS * 1000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -55,6 +57,10 @@ function SilveringDashboard({ user, onLogout }) {
       priority: formData.priority,
       targetMetricAffected: formData.targetMetricAffected,
       operator: user.username,
+      statusCode: '1100', // Silvering manual form
+      reworked: false,
+      decision: true,
+      causeOfFailure: '',
       timestamp: new Date()
     };
 

@@ -53,6 +53,10 @@ function StreetingDashboard({ user, onLogout }) {
           deviceSource: 'encoder'
         },
         operator: user.username,
+        statusCode: '2100', // Streeting manual form
+        reworked: false,
+        decision: true,
+        causeOfFailure: '',
         timestamp: new Date()
       };
 

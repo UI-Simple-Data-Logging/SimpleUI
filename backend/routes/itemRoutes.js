@@ -15,6 +15,10 @@ router.post('/', async (req, res) => {
       priority,
       targetMetricAffected,
       operator,
+      statusCode,
+      reworked,
+      decision,
+      causeOfFailure,
       timestamp
     } = req.body;
 
@@ -35,6 +39,11 @@ router.post('/', async (req, res) => {
       }
     }
 
+    // Validate causeOfFailure when decision is false
+    if (decision === false && (!causeOfFailure || causeOfFailure.trim() === '')) {
+      throw new Error('Cause of failure is required when decision is set to No');
+    }
+
     const item = new Item({
       processType,
       squeegeeSpeed,
@@ -45,6 +54,10 @@ router.post('/', async (req, res) => {
       priority: priority || 'M',
       targetMetricAffected: targetMetricAffected || [],
       operator: operator || 'Unknown',
+      statusCode,
+      reworked: reworked || false,
+      decision: decision !== undefined ? decision : true,
+      causeOfFailure: causeOfFailure || '',
       timestamp: timestamp || Date.now()
     });
 
@@ -80,7 +93,16 @@ router.put('/:id', async (req, res) => {
     existing.priority = req.body.priority || existing.priority;
     existing.targetMetricAffected = req.body.targetMetricAffected || existing.targetMetricAffected;
     existing.operator = req.body.operator || existing.operator;
+    existing.statusCode = req.body.statusCode || existing.statusCode;
+    existing.reworked = req.body.reworked !== undefined ? req.body.reworked : existing.reworked;
+    existing.decision = req.body.decision !== undefined ? req.body.decision : existing.decision;
+    existing.causeOfFailure = req.body.causeOfFailure !== undefined ? req.body.causeOfFailure : existing.causeOfFailure;
     existing.timestamp = Date.now();
+
+    // Validate causeOfFailure when decision is false
+    if (existing.decision === false && (!existing.causeOfFailure || existing.causeOfFailure.trim() === '')) {
+      throw new Error('Cause of failure is required when decision is set to No');
+    }
 
     const nestedFields = ['squeegeeSpeed', 'printPressure', 'inkViscosity', 'temperature', 'speed'];
     nestedFields.forEach(field => {
