@@ -4,6 +4,7 @@ import './App.css';   // Custom global styles
 import LoginPage from './components/LoginPage';
 import SilveringDashboard from './components/silvering/SilveringDashboard';
 import StreetingDashboard from './components/streeting/StreetingDashboard';
+import QualityControlDashboard from './components/quality_control/QualityControlDashboard';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -26,6 +27,8 @@ function App() {
         return <SilveringDashboard user={currentUser} onLogout={handleLogout} />;
       case 'streeting':
         return <StreetingDashboard user={currentUser} onLogout={handleLogout} />;
+      case 'quality_control':
+        return <QualityControlDashboard user={currentUser} onLogout={handleLogout} />;
       default:
         return <LoginPage onLogin={handleLogin} />;
     }

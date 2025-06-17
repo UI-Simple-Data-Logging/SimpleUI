@@ -9,7 +9,8 @@ export const STATUS_CODES = {
   // Department codes (First digit)
   DEPARTMENTS: {
     SILVERING: '1',
-    STREETING: '2'
+    STREETING: '2',
+    QUALITY_CONTROL: '3'
   },
 
   // Source codes (Second digit)  
@@ -59,7 +60,13 @@ export const PREDEFINED_CODES = {
 
   // Streeting sensor data
   STREETING_THERMOMETER_SENSOR: '2240',
-  STREETING_ENCODER_SENSOR: '2250'
+  STREETING_ENCODER_SENSOR: '2250',
+
+  // Quality Control manual form entries
+  QUALITY_CONTROL_MANUAL: '3100',
+  QUALITY_CONTROL_SILVERING_STATION: '3110',
+  QUALITY_CONTROL_STREETING_STATION: '3120',
+  QUALITY_CONTROL_FINAL_PRODUCT: '3130'
 };
 
 /**

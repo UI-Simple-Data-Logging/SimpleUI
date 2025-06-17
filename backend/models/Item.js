@@ -32,7 +32,7 @@ const mongoose = require('mongoose');
 const itemSchema = new mongoose.Schema({
   processType: {
     type: String,
-    enum: ['Silvering', 'Streeting'],
+    enum: ['Silvering', 'Streeting', 'QualityControl'],
     required: true
   },
 
@@ -65,6 +65,20 @@ const itemSchema = new mongoose.Schema({
     deviceSource: { type: String, default: 'encoder' }
   },
 
+  // Quality Control fields
+  processStation: {
+    type: String,
+    enum: ['Silvering', 'Streeting', 'Final Product check']
+  },
+  productId: {
+    type: String
+  },
+  reworkability: {
+    type: String,
+    enum: ['Yes', 'No']
+  },
+  affectedOutput: [{ type: String }],
+
   // Shared fields
   priority: {
     type: String,
@@ -83,27 +97,16 @@ const itemSchema = new mongoose.Schema({
     required: true
   },
   reworked: {
-    type: Boolean,
-    default: false
+    type: String,
+    enum: ['Yes', 'No'],
+    default: 'No'
   },
   decision: {
-    type: Boolean,
-    default: true
-  },
-  causeOfFailure: {
     type: String,
-    default: '',
-    validate: {
-      validator: function(v) {
-        // If decision is false, causeOfFailure should not be empty
-        if (this.decision === false && (!v || v.trim() === '')) {
-          return false;
-        }
-        return true;
-      },
-      message: 'Cause of failure is required when decision is set to No'
-    }
+    enum: ['Yes', 'No', 'Goes to Rework'],
+    default: 'Yes'
   },
+  causeOfFailure: [{ type: String }],
   
   timestamp: {
     type: Date,
@@ -126,7 +129,9 @@ itemSchema.pre('save', function(next) {
  */
 function generateStatusCode(item) {
   // First digit: Department
-  const dept = item.processType === 'Silvering' ? '1' : '2';
+  let dept = '1'; // Default to silvering
+  if (item.processType === 'Streeting') dept = '2';
+  else if (item.processType === 'QualityControl') dept = '3';
   
   // Second digit: Always '1' for manual form entry (can be updated for sensor data)
   const source = '1';

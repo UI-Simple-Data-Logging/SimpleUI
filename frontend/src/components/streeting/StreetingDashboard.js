@@ -6,7 +6,7 @@ import DataTable from '../common/DataTable';
 import StreetingForm from './StreetingForm';
 import StreetingChart from './StreetingChart';
 
-const REFRESH_INTERVAL_SECONDS = 5;
+const REFRESH_INTERVAL_SECONDS = 0.5;
 
 function StreetingDashboard({ user, onLogout }) {
   const [items, setItems] = useState([]);

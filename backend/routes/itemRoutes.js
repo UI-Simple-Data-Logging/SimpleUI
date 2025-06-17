@@ -12,6 +12,10 @@ router.post('/', async (req, res) => {
       inkViscosity,
       temperature,
       speed,
+      processStation,
+      productId,
+      reworkability,
+      affectedOutput,
       priority,
       targetMetricAffected,
       operator,
@@ -39,9 +43,16 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // Validate causeOfFailure when decision is false
-    if (decision === false && (!causeOfFailure || causeOfFailure.trim() === '')) {
-      throw new Error('Cause of failure is required when decision is set to No');
+    // Quality Control validation
+    if (processType === 'QualityControl') {
+      if (!processStation || !productId) {
+        throw new Error('Missing required quality control fields');
+      }
+    }
+
+    // Validate causeOfFailure when decision is false or goes to rework
+    if ((decision === 'No' || decision === 'Goes to Rework') && (!causeOfFailure || causeOfFailure.length === 0)) {
+      throw new Error('Cause of failure is required when decision is No or Goes to Rework');
     }
 
     const item = new Item({
@@ -51,13 +62,17 @@ router.post('/', async (req, res) => {
       inkViscosity,
       temperature,
       speed,
+      processStation,
+      productId,
+      reworkability,
+      affectedOutput: affectedOutput || [],
       priority: priority || 'M',
       targetMetricAffected: targetMetricAffected || [],
       operator: operator || 'Unknown',
       statusCode,
-      reworked: reworked || false,
-      decision: decision !== undefined ? decision : true,
-      causeOfFailure: causeOfFailure || '',
+      reworked: reworked || 'No',
+      decision: decision || 'Yes',
+      causeOfFailure: causeOfFailure || [],
       timestamp: timestamp || Date.now()
     });
 
@@ -90,6 +105,10 @@ router.put('/:id', async (req, res) => {
     if (!existing) return res.status(404).json({ message: 'Item not found' });
 
     existing.processType = req.body.processType || existing.processType;
+    existing.processStation = req.body.processStation || existing.processStation;
+    existing.productId = req.body.productId || existing.productId;
+    existing.reworkability = req.body.reworkability || existing.reworkability;
+    existing.affectedOutput = req.body.affectedOutput || existing.affectedOutput;
     existing.priority = req.body.priority || existing.priority;
     existing.targetMetricAffected = req.body.targetMetricAffected || existing.targetMetricAffected;
     existing.operator = req.body.operator || existing.operator;
@@ -99,9 +118,10 @@ router.put('/:id', async (req, res) => {
     existing.causeOfFailure = req.body.causeOfFailure !== undefined ? req.body.causeOfFailure : existing.causeOfFailure;
     existing.timestamp = Date.now();
 
-    // Validate causeOfFailure when decision is false
-    if (existing.decision === false && (!existing.causeOfFailure || existing.causeOfFailure.trim() === '')) {
-      throw new Error('Cause of failure is required when decision is set to No');
+    // Validate causeOfFailure when decision is false or goes to rework
+    if ((existing.decision === 'No' || existing.decision === 'Goes to Rework') && 
+        (!existing.causeOfFailure || existing.causeOfFailure.length === 0)) {
+      throw new Error('Cause of failure is required when decision is No or Goes to Rework');
     }
 
     const nestedFields = ['squeegeeSpeed', 'printPressure', 'inkViscosity', 'temperature', 'speed'];
