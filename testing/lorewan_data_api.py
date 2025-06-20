@@ -375,9 +375,6 @@ def main():
             first_device_eui = device_euis[0]
             print(f"\n4. Fetching telemetry data for device {first_device_eui}...")
             telemetry_data = get_telemetry_data(first_device_eui, limit=50)
-            
-            print(f"\n5. Fetching latest telemetry data for device {first_device_eui}...")
-            latest_data = get_latest_telemetry_data(first_device_eui)
     else:
         print("\nWARNING: No devices found or devices data is not in expected format")
 
