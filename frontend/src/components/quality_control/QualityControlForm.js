@@ -3,48 +3,39 @@ import React, { useState } from 'react';
 const PROCESS_STATION_OPTIONS = ['Silvering', 'Streeting', 'Final Product check'];
 
 const CAUSE_OF_FAILURE_OPTIONS = [
-  'Material Defect',
-  'Equipment Malfunction',
-  'Process Parameter Out of Spec',
-  'Operator Error',
-  'Environmental Conditions',
+  'Voids',
+  'Insufficient Filling',
   'Contamination',
-  'Measurement Error',
-  'Design Issue'
+  'Cracks or Scratches',
+  'Operator Error',
+  'Flexible Substrate defect',
+  'Other'
 ];
 
 const AFFECTED_OUTPUT_OPTIONS = [
-  'Voids',
-  'Conductivity', 
-  'Thickness',
-  'Adhesion',
-  'Surface Quality',
-  'Dimensional Accuracy',
-  'Electrical Performance',
-  'Visual Appearance'
+  'No Conductivity and circuitry',
+  'Reliability',
+  'Out of specs',
+  'Other'
 ];
 
 // Mapping for auto-selection of affected output based on cause of failure
+// Format: { cause: ['affectedOutput1', 'affectedOutput2', ...] }
 const CAUSE_TO_OUTPUT_MAPPING = {
-  'Material Defect': ['Voids', 'Surface Quality', 'Electrical Performance'],
-  'Equipment Malfunction': ['Dimensional Accuracy', 'Thickness', 'Adhesion'],
-  'Process Parameter Out of Spec': ['Conductivity', 'Thickness', 'Voids'],
-  'Operator Error': ['Surface Quality', 'Dimensional Accuracy'],
-  'Environmental Conditions': ['Adhesion', 'Electrical Performance'],
-  'Contamination': ['Voids', 'Surface Quality', 'Electrical Performance'],
-  'Measurement Error': ['Dimensional Accuracy'],
-  'Design Issue': ['Electrical Performance', 'Visual Appearance']
+  'Voids': ['No Conductivity and circuitry', 'Reliability']
 };
 
-function QualityControlForm({ onSubmit, loading, existingItems }) {
-  const [formData, setFormData] = useState({
+function QualityControlForm({ onSubmit, loading, existingItems }) {  const [formData, setFormData] = useState({
     processStation: 'Silvering',
     productId: '',
     decision: 'Yes',
     reworkability: 'No',
     reworked: 'No',
     causeOfFailure: [],
-    affectedOutput: []
+    affectedOutput: [],
+    comments: '',
+    customCauseOfFailure: '',
+    customAffectedOutput: ''
   });
 
   const [validationErrors, setValidationErrors] = useState({});
@@ -68,8 +59,7 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
       setExistingRecord(existing);
       
       // If existing record's decision was "Goes to Rework", load the data
-      if (existing.decision === 'Goes to Rework') {
-        setFormData(prev => ({
+      if (existing.decision === 'Goes to Rework') {        setFormData(prev => ({
           ...prev,
           processStation: existing.processStation || 'Silvering',
           productId: existing.productId,
@@ -77,7 +67,10 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
           reworkability: existing.reworkability || 'No',
           reworked: existing.reworked || 'No',
           causeOfFailure: existing.causeOfFailure || [],
-          affectedOutput: existing.affectedOutput || []
+          affectedOutput: existing.affectedOutput || [],
+          comments: existing.comments || '',
+          customCauseOfFailure: '',
+          customAffectedOutput: ''
         }));
         
         // If the existing record was reworked, show all fields regardless of decision
@@ -114,7 +107,6 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
       }
     }
   };
-
   const toggleCauseOfFailure = (cause) => {
     const newCauses = formData.causeOfFailure.includes(cause)
       ? formData.causeOfFailure.filter(c => c !== cause)
@@ -134,7 +126,9 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
     setFormData(prev => ({
       ...prev,
       causeOfFailure: newCauses,
-      affectedOutput: autoAffectedOutputs
+      affectedOutput: autoAffectedOutputs,
+      // Clear custom cause if "Other" is deselected
+      customCauseOfFailure: cause === 'Other' && !newCauses.includes('Other') ? '' : prev.customCauseOfFailure
     }));
 
     // Clear validation errors when user makes selection
@@ -142,7 +136,6 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
       setValidationErrors(prev => ({ ...prev, causeOfFailure: '' }));
     }
   };
-
   const toggleAffectedOutput = (output) => {
     const newAffectedOutput = formData.affectedOutput.includes(output)
       ? formData.affectedOutput.filter(o => o !== output)
@@ -150,7 +143,9 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
 
     setFormData(prev => ({
       ...prev,
-      affectedOutput: newAffectedOutput
+      affectedOutput: newAffectedOutput,
+      // Clear custom output if "Other" is deselected
+      customAffectedOutput: output === 'Other' && !newAffectedOutput.includes('Other') ? '' : prev.customAffectedOutput
     }));
 
     // Clear validation errors when user makes selection
@@ -160,15 +155,18 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
   };
 
   const validateForm = () => {
-    const errors = {};
-
-    // If decision is "No", cause of failure and affected output are required
+    const errors = {};    // If decision is "No", cause of failure and affected output are required
     if (formData.decision === 'No') {
       if (formData.causeOfFailure.length === 0) {
         errors.causeOfFailure = 'At least one cause of failure must be selected when decision is No';
+      } else if (formData.causeOfFailure.includes('Other') && !formData.customCauseOfFailure.trim()) {
+        errors.causeOfFailure = 'Please specify the other cause of failure';
       }
+      
       if (formData.affectedOutput.length === 0) {
         errors.affectedOutput = 'At least one affected output must be selected when decision is No';
+      } else if (formData.affectedOutput.includes('Other') && !formData.customAffectedOutput.trim()) {
+        errors.affectedOutput = 'Please specify the other affected output';
       }
     }
 
@@ -176,13 +174,23 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
     if (formData.decision === 'Goes to Rework') {
       if (formData.causeOfFailure.length === 0) {
         errors.causeOfFailure = 'At least one cause of failure must be selected when decision is Goes to Rework';
+      } else if (formData.causeOfFailure.includes('Other') && !formData.customCauseOfFailure.trim()) {
+        errors.causeOfFailure = 'Please specify the other cause of failure';
       }
+    }
+
+    // Validate custom inputs when "Other" is selected
+    if (formData.causeOfFailure.includes('Other') && !formData.customCauseOfFailure.trim()) {
+      errors.causeOfFailure = 'Please specify the other cause of failure';
+    }
+    
+    if (formData.affectedOutput.includes('Other') && !formData.customAffectedOutput.trim()) {
+      errors.affectedOutput = 'Please specify the other affected output';
     }
 
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -191,10 +199,26 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
       return;
     }
     
-    // Always submit all form data, regardless of conditional visibility
-    onSubmit(formData);
+    // Prepare submission data with custom inputs merged
+    const submissionData = {
+      ...formData,
+      causeOfFailure: [
+        ...formData.causeOfFailure.filter(cause => cause !== 'Other'),
+        ...(formData.causeOfFailure.includes('Other') && formData.customCauseOfFailure.trim() 
+          ? [formData.customCauseOfFailure.trim()] 
+          : [])
+      ],
+      affectedOutput: [
+        ...formData.affectedOutput.filter(output => output !== 'Other'),
+        ...(formData.affectedOutput.includes('Other') && formData.customAffectedOutput.trim() 
+          ? [formData.customAffectedOutput.trim()] 
+          : [])
+      ]
+    };
     
-    // Reset form after submission
+    // Always submit all form data, regardless of conditional visibility
+    onSubmit(submissionData);
+      // Reset form after submission
     setFormData({
       processStation: 'Silvering',
       productId: '',
@@ -202,7 +226,10 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
       reworkability: 'No',
       reworked: 'No',
       causeOfFailure: [],
-      affectedOutput: []
+      affectedOutput: [],
+      comments: '',
+      customCauseOfFailure: '',
+      customAffectedOutput: ''
     });
     setValidationErrors({});
     setExistingRecord(null);
@@ -380,10 +407,25 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
                 >
                   {cause}
                 </button>
-              ))}
-            </div>
+              ))}            </div>
             {validationErrors.causeOfFailure && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.causeOfFailure}</p>
+            )}
+            {/* Custom Cause of Failure Input */}
+            {formData.causeOfFailure.includes('Other') && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Specify Other Cause of Failure
+                </label>
+                <input
+                  type="text"
+                  value={formData.customCauseOfFailure}
+                  onChange={(e) => setFormData({ ...formData, customCauseOfFailure: e.target.value })}
+                  placeholder="Enter specific cause of failure"
+                  className="w-full p-2 border rounded"
+                  disabled={loading}
+                />
+              </div>
             )}
           </div>
         )}
@@ -410,13 +452,41 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {
                 >
                   {output}
                 </button>
-              ))}
-            </div>
+              ))}            </div>
             {validationErrors.affectedOutput && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.affectedOutput}</p>
             )}
+            {/* Custom Affected Output Input */}
+            {formData.affectedOutput.includes('Other') && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Specify Other Affected Output
+                </label>
+                <input
+                  type="text"
+                  value={formData.customAffectedOutput}
+                  onChange={(e) => setFormData({ ...formData, customAffectedOutput: e.target.value })}
+                  placeholder="Enter specific affected output"
+                  className="w-full p-2 border rounded"
+                  disabled={loading}
+                />
+              </div>
+            )}
           </div>
         )}
+
+        {/* Comments */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Comments</label>
+          <textarea
+            value={formData.comments}
+            onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
+            placeholder="Enter any additional comments or observations..."
+            rows={3}
+            className="w-full p-2 border rounded resize-vertical"
+            disabled={loading}
+          />
+        </div>
 
         {/* Submit */}
         <button

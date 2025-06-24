@@ -72,10 +72,9 @@ const itemSchema = new mongoose.Schema({
   },
   productId: {
     type: String
-  },
-  reworkability: {
+  },  reworkability: {
     type: String,
-    enum: ['Yes', 'No']
+    enum: ['Yes', 'No', 'N/A']
   },
   affectedOutput: [{ type: String }],
 
@@ -98,7 +97,7 @@ const itemSchema = new mongoose.Schema({
   },
   reworked: {
     type: String,
-    enum: ['Yes', 'No'],
+    enum: ['Yes', 'No', 'N/A'],
     default: 'No'
   },
   decision: {
@@ -107,7 +106,7 @@ const itemSchema = new mongoose.Schema({
     default: 'Yes'
   },
   causeOfFailure: [{ type: String }],
-  
+  comments: { type: String, default: '' },
   timestamp: {
     type: Date,
     default: Date.now
