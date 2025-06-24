@@ -75,9 +75,30 @@ function ItemManager() {
       setLoading(true);
       
       const sensorData = [
-        { name: 'Print Pressure', value: parseFloat(currentItem.printPressure).toString() },
-        { name: 'Ink Viscosity', value: parseFloat(currentItem.inkViscosity).toString() },
-        { name: 'Squeegee Speed', value: parseFloat(currentItem.squeegeeSpeed).toString() }
+        { 
+          name: 'Print Pressure', 
+          value: parseFloat(currentItem.printPressure).toString(),
+          statusCode: '1220', // Silvering Load Cell sensor
+          reworked: false,
+          decision: true,
+          causeOfFailure: ''
+        },
+        { 
+          name: 'Ink Viscosity', 
+          value: parseFloat(currentItem.inkViscosity).toString(),
+          statusCode: '1230', // Silvering Viscometer sensor
+          reworked: false,
+          decision: true,
+          causeOfFailure: ''
+        },
+        { 
+          name: 'Squeegee Speed', 
+          value: parseFloat(currentItem.squeegeeSpeed).toString(),
+          statusCode: '1210', // Silvering Clicker sensor
+          reworked: false,
+          decision: true,
+          causeOfFailure: ''
+        }
       ];
 
       if (currentItem.id) {
@@ -95,7 +116,7 @@ function ItemManager() {
             return await createItem(data);
           }
         });
-
+        
         const results = await Promise.all(updatePromises);
         toast.success('Sensor data updated successfully!');
 
