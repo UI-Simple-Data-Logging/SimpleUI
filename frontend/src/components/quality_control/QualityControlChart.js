@@ -35,12 +35,15 @@ function QualityControlChart({ items }) {
       const decision = item.decision || 'Unknown';
       acc[decision] = (acc[decision] || 0) + 1;
       return acc;
-    }, {});
-    const decisionData = Object.entries(decisionCounts).map(([key, value]) => ({
-      name: key === 'Yes' ? 'Pass' : key === 'No' ? 'Fail' : key, // Map Yes to Pass and No to Fail
-      value: value,
-      color: DECISION_COLORS[key] || '#9ca3af'
-    }));
+    }, {});    // Ensure consistent order: Pass, Fail, Goes to Rework
+    const decisionOrder = ['Yes', 'No', 'Goes to Rework'];
+    const decisionData = decisionOrder
+      .filter(key => decisionCounts[key] > 0)
+      .map(key => ({
+        name: key === 'Yes' ? 'Pass' : key === 'No' ? 'Fail' : key, // Map Yes to Pass and No to Fail
+        value: decisionCounts[key],
+        color: DECISION_COLORS[key] || '#9ca3af'
+      }));
 
     // Prepare reworked data (exclude N/A values)
     const reworkedCounts = items.reduce((acc, item) => {
@@ -50,13 +53,15 @@ function QualityControlChart({ items }) {
         acc[reworked] = (acc[reworked] || 0) + 1;
       }
       return acc;
-    }, {});
-
-    const reworkedData = Object.entries(reworkedCounts).map(([key, value]) => ({
-      name: key,
-      value: value,
-      color: REWORKED_COLORS[key] || '#9ca3af'
-    }));
+    }, {});    // Ensure consistent order: Yes, No
+    const reworkedOrder = ['Yes', 'No'];
+    const reworkedData = reworkedOrder
+      .filter(key => reworkedCounts[key] > 0)
+      .map(key => ({
+        name: key,
+        value: reworkedCounts[key],
+        color: REWORKED_COLORS[key] || '#9ca3af'
+      }));
 
     // Prepare yield data (only Yes and No from decision field)
     const yieldCounts = items.reduce((acc, item) => {
@@ -65,13 +70,15 @@ function QualityControlChart({ items }) {
         acc[decision] = (acc[decision] || 0) + 1;
       }
       return acc;
-    }, {});
-
-    const yieldData = Object.entries(yieldCounts).map(([key, value]) => ({
-      name: key === 'Yes' ? 'Pass' : 'Fail', // Map Yes to Pass and No to Fail
-      value: value,
-      color: YIELD_COLORS[key] || '#9ca3af'
-    }));
+    }, {});    // Ensure consistent order: Pass, Fail
+    const yieldOrder = ['Yes', 'No'];
+    const yieldData = yieldOrder
+      .filter(key => yieldCounts[key] > 0)
+      .map(key => ({
+        name: key === 'Yes' ? 'Pass' : 'Fail', // Map Yes to Pass and No to Fail
+        value: yieldCounts[key],
+        color: YIELD_COLORS[key] || '#9ca3af'
+      }));
 
     // Prepare reworked success data (only records with Reworked = Yes, then their rework outcome)
     const reworkedItems = items.filter(item => item.reworked === 'Yes');
@@ -81,12 +88,15 @@ function QualityControlChart({ items }) {
         acc[outcome] = (acc[outcome] || 0) + 1;
       }
       return acc;
-    }, {});
-    const reworkedSuccessData = Object.entries(reworkedSuccessCounts).map(([key, value]) => ({
-      name: key === 'Yes' ? 'Success' : 'Scrap', // Map Yes to Success and No to Scrap
-      value: value,
-      color: REWORK_SUCCESS_COLORS[key] || '#9ca3af'
-    }));
+    }, {});    // Ensure consistent order: Success, Scrap
+    const reworkedSuccessOrder = ['Yes', 'No'];
+    const reworkedSuccessData = reworkedSuccessOrder
+      .filter(key => reworkedSuccessCounts[key] > 0)
+      .map(key => ({
+        name: key === 'Yes' ? 'Success' : 'Scrap', // Map Yes to Success and No to Scrap
+        value: reworkedSuccessCounts[key],
+        color: REWORK_SUCCESS_COLORS[key] || '#9ca3af'
+      }));
 
     return {
       decisionData,

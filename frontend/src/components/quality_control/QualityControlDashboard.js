@@ -188,7 +188,7 @@ function QualityControlDashboard({ user, onLogout }) {
                 <div className="bg-white rounded-lg shadow p-4 h-32">
                   <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
                   <div className="text-sm text-gray-500">
-                    Announcement will show up here.
+                    Announcements will show up here.
                   </div>
                 </div>
               </div>
