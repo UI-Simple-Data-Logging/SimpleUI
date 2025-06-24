@@ -15,17 +15,16 @@ function QualityControlDashboard({ user, onLogout }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [currentView, setCurrentView] = useState('analytics'); // 'form', 'analytics', 'liveSensors'
+  const [currentView, setCurrentView] = useState('form'); // 'form', 'analytics', 'liveSensors'
 
   const fetchItems = async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
-      const data = await getItems();
-      // Get all items with sensor data (silvering, streeting, or QualityControl)
+      const data = await getItems();      // Get all items with sensor data (Silvering, Streeting, or QualityControl)
       const sensorData = data.filter(item => 
         item.processType === 'QualityControl' || 
-        item.processType === 'silvering' || 
-        item.processType === 'streeting'
+        item.processType === 'Silvering' || 
+        item.processType === 'Streeting'
       );
       setItems(sensorData);
       setLastUpdate(new Date());
@@ -161,14 +160,11 @@ function QualityControlDashboard({ user, onLogout }) {
       />
 
       <div className="max-w-7xl mx-auto p-6">        {/* Toggle Button */}
-        <div className="mb-6 flex justify-center">
-          <button
+        <div className="mb-6 flex justify-center">          <button
             onClick={toggleView}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-md"
           >
-            {currentView === 'form' ? '📊 View Analytics' : 
-             currentView === 'analytics' ? '� Live Sensors' : 
-             '� View Form'}
+            {currentView === 'form' ? '📊 View Analytics' : '📝 View Form'}
           </button>
         </div>
 
@@ -185,12 +181,6 @@ function QualityControlDashboard({ user, onLogout }) {
           </div>        ) : currentView === 'analytics' ? (
           /* Analytics View */
           <div className="space-y-6">
-            {/* Latest Sensor Values */}
-            <LatestSensorValues 
-              items={items} 
-              onNavigateToLiveSensors={switchToLiveSensors}
-            />
-
             {/* Top Row - Status and Placeholder */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Additional Information Container */}
@@ -198,7 +188,7 @@ function QualityControlDashboard({ user, onLogout }) {
                 <div className="bg-white rounded-lg shadow p-4 h-32">
                   <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
                   <div className="text-sm text-gray-500">
-                    This section is reserved for future functionality and enhancements.
+                    Announcement will show up here.
                   </div>
                 </div>
               </div>
@@ -229,6 +219,12 @@ function QualityControlDashboard({ user, onLogout }) {
                 </div>
               </div>
             </div>
+
+            {/* Latest Sensor Values */}
+            <LatestSensorValues 
+              items={items} 
+              onNavigateToLiveSensors={switchToLiveSensors}
+            />
 
             {/* Charts Section */}
             <QualityControlChart 
@@ -245,12 +241,6 @@ function QualityControlDashboard({ user, onLogout }) {
         ) : (
           /* Live Sensors View */
           <div className="space-y-6">
-            {/* Latest Quality Metrics */}
-            <LatestQualityMetrics 
-              items={items.filter(item => item.processType === 'QualityControl')} 
-              onViewAnalytics={switchToAnalytics}
-            />
-
             {/* Top Row - Status and Placeholder */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Additional Information Container */}
@@ -289,6 +279,12 @@ function QualityControlDashboard({ user, onLogout }) {
                 </div>
               </div>
             </div>
+
+            {/* Latest Quality Metrics */}
+            <LatestQualityMetrics 
+              items={items.filter(item => item.processType === 'QualityControl')} 
+              onViewAnalytics={switchToAnalytics}
+            />
 
             {/* Live Sensor Chart Section */}
             <LiveSensorChart items={items} />

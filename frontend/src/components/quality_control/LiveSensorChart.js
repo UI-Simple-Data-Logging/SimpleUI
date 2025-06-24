@@ -1,19 +1,18 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 
 // Y-axis ranges for different sensors (normalized for display)
 const SENSOR_RANGES = {
   temperature: { min: 0, max: 100, unit: '°C', color: '#ef4444', offset: 0 },
-  speed: { min: -100, max: 0, unit: 'mm/s', color: '#3b82f6', offset: -100 },
-  squeegeeSpeed: { min: -200, max: -100, unit: 'mm/s', color: '#10b981', offset: -200 },
-  printPressure: { min: -300, max: -200, unit: 'N/m²', color: '#f59e0b', offset: -300 },
-  inkViscosity: { min: -400, max: -300, unit: 'cP', color: '#8b5cf6', offset: -400 }
+  speed: { min: -150, max: -50, unit: 'mm/s', color: '#3b82f6', offset: -150 },
+  squeegeeSpeed: { min: -300, max: -200, unit: 'mm/s', color: '#10b981', offset: -300 },
+  printPressure: { min: -450, max: -350, unit: 'N/m²', color: '#f59e0b', offset: -450 },
+  inkViscosity: { min: -600, max: -500, unit: 'cP', color: '#8b5cf6', offset: -600 }
 };
 
 function LiveSensorChart({ items }) {
-  const [isLive, setIsLive] = useState(false);
   const [maxDataPoints, setMaxDataPoints] = useState(50);
 
   // Prepare chart data with normalized sensor values
@@ -83,22 +82,7 @@ function LiveSensorChart({ items }) {
             inkViscosity: item.inkViscosity?.value ? parseFloat(item.inkViscosity.value) : null
           }
         };
-      });
-  }, [items, maxDataPoints]);
-
-  // Auto-refresh when live mode is enabled
-  useEffect(() => {
-    let interval;
-    if (isLive) {
-      interval = setInterval(() => {
-        // Force a re-render to get latest data
-        // In a real application, you might want to fetch new data here
-      }, 2000); // Refresh every 2 seconds
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isLive]);
+      });  }, [items, maxDataPoints]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
@@ -158,7 +142,6 @@ function LiveSensorChart({ items }) {
       </div>
     );
   }
-
   return (
     <div className="bg-white rounded-lg shadow p-6">
       {/* Header with controls */}
@@ -179,18 +162,6 @@ function LiveSensorChart({ items }) {
               <option value={200}>200</option>
             </select>
           </div>
-          
-          {/* Live mode toggle */}
-          <button
-            onClick={() => setIsLive(!isLive)}
-            className={`px-4 py-2 text-sm font-medium rounded-md transition-all duration-300 ${
-              isLive
-                ? 'bg-green-500 text-white shadow-md'
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-          >
-            {isLive ? '🔴 Live' : '⏸️ Paused'}
-          </button>
         </div>
       </div>
 
@@ -209,14 +180,12 @@ function LiveSensorChart({ items }) {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Chart */}
-      <ResponsiveContainer width="100%" height={500}>
+      </div>      {/* Chart */}
+      <ResponsiveContainer width="100%" height={550}>
         <LineChart 
           data={chartData} 
           isAnimationActive={false}
-          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+          margin={{ top: 30, right: 40, left: 30, bottom: 30 }}
         >
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
@@ -227,7 +196,7 @@ function LiveSensorChart({ items }) {
             height={80}
           />
           <YAxis 
-            domain={[-400, 100]}
+            domain={[-600, 100]}
             tick={{ fontSize: 10 }}
             tickFormatter={formatYTick}
             label={{ 
@@ -301,12 +270,10 @@ function LiveSensorChart({ items }) {
           )}
         </LineChart>
       </ResponsiveContainer>
-      
-      {/* Status Information */}
+        {/* Status Information */}
       <div className="mt-4 flex justify-between items-center text-sm text-gray-600">
         <div>
           Showing {chartData.length} data points
-          {isLive && <span className="ml-2 text-green-600">• Auto-refreshing</span>}
         </div>
         <div>
           Last update: {chartData.length > 0 ? 
