@@ -43,6 +43,7 @@ function LoginPage({ onLogin }) {
               <option value="">Select Department</option>
               <option value="silvering">Silvering</option>
               <option value="streeting">Streeting</option>
+              <option value="quality_control">Quality Control</option>
             </select>
           </div>
 
