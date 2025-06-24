@@ -25,7 +25,7 @@ const REWORK_SUCCESS_COLORS = {
   'No': '#ef4444'        // Red
 };
 
-function QualityControlChart({ items }) {
+function QualityControlChart({ items, onNavigateToLiveSensors }) {
   // State for toggling between pass rate and defect rate
   const [showPassRate, setShowPassRate] = useState(false);
   // Memoize expensive calculations to improve performance
@@ -325,83 +325,50 @@ function QualityControlChart({ items }) {
       inkViscosityBinData: createBinnedData(items, 'inkViscosity', 2) // 2 cP bins
     };
   }, [items]);
-
   const { temperatureBinData, speedBinData, squeegeeSpeedBinData, printPressureBinData, inkViscosityBinData } = binnedAnalysisData;
 
-  // Helper function to get display names for sensor fields
-  const getFieldDisplayName = (field) => {
-    const fieldLabels = {
-      temperature: 'Temperature (°C)',
-      speed: 'Speed (mm/s)',
-      squeegeeSpeed: 'Squeegee Speed (mm/s)',
-      printPressure: 'Print Pressure (N/m²)',
-      inkViscosity: 'Ink Viscosity (cP)'
+  // Get latest sensor values
+  const latestSensorData = useMemo(() => {
+    if (!items || items.length === 0) return null;
+    
+    // Sort by timestamp and get the most recent item with sensor data
+    const sortedItems = items
+      .filter(item => item.timestamp && (
+        item.temperature?.value || 
+        item.speed?.value || 
+        item.squeegeeSpeed?.value || 
+        item.printPressure?.value || 
+        item.inkViscosity?.value
+      ))
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    if (sortedItems.length === 0) return null;
+    
+    const latest = sortedItems[0];
+    return {
+      timestamp: new Date(latest.timestamp),
+      temperature: latest.temperature?.value ? {
+        value: parseFloat(latest.temperature.value),
+        unit: latest.temperature.unit || '°C'
+      } : null,
+      speed: latest.speed?.value ? {
+        value: parseFloat(latest.speed.value),
+        unit: latest.speed.unit || 'mm/s'
+      } : null,
+      squeegeeSpeed: latest.squeegeeSpeed?.value ? {
+        value: parseFloat(latest.squeegeeSpeed.value),
+        unit: latest.squeegeeSpeed.unit || 'mm/s'
+      } : null,
+      printPressure: latest.printPressure?.value ? {
+        value: parseFloat(latest.printPressure.value),
+        unit: latest.printPressure.unit || 'N/m²'
+      } : null,
+      inkViscosity: latest.inkViscosity?.value ? {
+        value: parseFloat(latest.inkViscosity.value),
+        unit: latest.inkViscosity.unit || 'cP'
+      } : null
     };
-    return fieldLabels[field] || field.charAt(0).toUpperCase() + field.slice(1);
-  };
-  // Calculate correlation matrix for sensor parameters vs defects
-  const correlationData = useMemo(() => {
-    // Early return if no items
-    if (!items || items.length < 5) return null;
-    
-    // Use actual sensor fields from Item.js model
-    const sensorFields = ['temperature', 'speed', 'squeegeeSpeed', 'printPressure', 'inkViscosity'];
-    
-    // Get items that have decision data (pre-filter once)
-    const itemsWithDecision = items.filter(item => 
-      item.decision && 
-      (item.decision === 'Yes' || item.decision === 'No' || item.decision === 'Goes to Rework')
-    );
-
-    if (itemsWithDecision.length < 5) return null;
-
-    // Calculate correlations for each field
-    const correlations = [];
-    
-    for (const field of sensorFields) {
-      // Filter items that have valid data for this field
-      const fieldItems = itemsWithDecision.filter(item => 
-        item[field] && 
-        typeof item[field] === 'object' && 
-        item[field].value !== undefined && 
-        item[field].value !== null &&
-        !isNaN(parseFloat(item[field].value))
-      );
-      
-      if (fieldItems.length < 5) continue; // Skip if not enough data
-      
-      const values = fieldItems.map(item => parseFloat(item[field].value));
-      const defects = fieldItems.map(item => 
-        item.decision === 'No' || item.decision === 'Goes to Rework' ? 1 : 0
-      );
-      
-      // Calculate Pearson correlation coefficient
-      const n = values.length;
-      const meanX = values.reduce((a, b) => a + b, 0) / n;
-      const meanY = defects.reduce((a, b) => a + b, 0) / n;
-      
-      const numerator = values.reduce((acc, x, i) => acc + (x - meanX) * (defects[i] - meanY), 0);
-      const denomX = Math.sqrt(values.reduce((acc, x) => acc + Math.pow(x - meanX, 2), 0));
-      const denomY = Math.sqrt(defects.reduce((acc, y) => acc + Math.pow(y - meanY, 2), 0));
-      
-      const correlation = (denomX === 0 || denomY === 0) ? 0 : numerator / (denomX * denomY);
-      
-      // Only add valid correlations
-      if (!isNaN(correlation) && isFinite(correlation)) {
-        correlations.push({
-          parameter: getFieldDisplayName(field),
-          correlation: correlation,
-          absCorrelation: Math.abs(correlation),
-          field: field
-        });
-      }
-    }
-
-    // Sort by absolute correlation value
-    correlations.sort((a, b) => b.absCorrelation - a.absCorrelation);
-
-    return correlations.length > 0 ? { data: correlations } : null;
-  }, [items]); // Only recalculate when items change
+  }, [items]);
 
 const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -532,29 +499,6 @@ const CustomTooltip = ({ active, payload }) => {
     }
     return null;
   };
-
-  const CustomCorrelationTooltip = ({ active, payload, label }) => {
-    if (active && payload && payload.length) {
-      const data = payload[0].payload;
-      const correlation = data.correlation;
-      const strength = Math.abs(correlation) > 0.7 ? 'Strong' : 
-                     Math.abs(correlation) > 0.3 ? 'Moderate' : 'Weak';
-      const direction = correlation > 0 ? 'Positive' : 'Negative';
-      
-      return (
-        <div className="bg-white p-3 border rounded shadow-lg">
-          <p className="font-medium">{label}</p>
-          <p className="text-sm text-gray-600">
-            Correlation: <span className="font-medium">{correlation.toFixed(3)}</span>
-          </p>
-          <p className="text-sm text-gray-600">
-            <span className="font-medium">{strength} {direction}</span> relationship with defects
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
   // Custom tick formatter for long labels
   const formatTick = (value) => {
     if (value.length > 15) {
@@ -588,10 +532,66 @@ const CustomTooltip = ({ active, payload }) => {
       </div>
     );
   }
-
   return (
     <div className="bg-white rounded-lg shadow p-6">
       <h3 className="text-lg font-semibold mb-4">📊 Quality Control Analytics</h3>
+      
+      {/* Latest Sensor Values and Live Data Button */}
+      <div className="mb-6 bg-gray-50 rounded-lg p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h4 className="text-md font-medium">Latest Sensor Values</h4>          <button
+            onClick={onNavigateToLiveSensors || (() => console.log('Live Sensor Data clicked'))}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            📊 Live Sensor Data
+          </button>
+        </div>
+        
+        {latestSensorData ? (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {latestSensorData.temperature && (
+              <div className="bg-white rounded p-3 border">
+                <div className="text-xs text-gray-500 mb-1">Temperature</div>
+                <div className="font-semibold text-lg">{latestSensorData.temperature.value.toFixed(1)}{latestSensorData.temperature.unit}</div>
+              </div>
+            )}
+            {latestSensorData.speed && (
+              <div className="bg-white rounded p-3 border">
+                <div className="text-xs text-gray-500 mb-1">Speed</div>
+                <div className="font-semibold text-lg">{latestSensorData.speed.value.toFixed(1)}{latestSensorData.speed.unit}</div>
+              </div>
+            )}
+            {latestSensorData.squeegeeSpeed && (
+              <div className="bg-white rounded p-3 border">
+                <div className="text-xs text-gray-500 mb-1">Squeegee Speed</div>
+                <div className="font-semibold text-lg">{latestSensorData.squeegeeSpeed.value.toFixed(1)}{latestSensorData.squeegeeSpeed.unit}</div>
+              </div>
+            )}
+            {latestSensorData.printPressure && (
+              <div className="bg-white rounded p-3 border">
+                <div className="text-xs text-gray-500 mb-1">Print Pressure</div>
+                <div className="font-semibold text-lg">{latestSensorData.printPressure.value.toFixed(1)}{latestSensorData.printPressure.unit}</div>
+              </div>
+            )}
+            {latestSensorData.inkViscosity && (
+              <div className="bg-white rounded p-3 border">
+                <div className="text-xs text-gray-500 mb-1">Ink Viscosity</div>
+                <div className="font-semibold text-lg">{latestSensorData.inkViscosity.value.toFixed(1)}{latestSensorData.inkViscosity.unit}</div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="text-gray-500 text-center py-4">
+            No sensor data available
+          </div>
+        )}
+        
+        {latestSensorData && (
+          <div className="text-xs text-gray-400 mt-2 text-center">
+            Last updated: {latestSensorData.timestamp.toLocaleString()}
+          </div>
+        )}
+      </div>
       
       {/* Top Row - Yield and Reworked Success Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -1195,78 +1195,7 @@ const CustomTooltip = ({ active, payload }) => {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Correlation Analysis Row */}
-      <div className="mt-8">
-        <h4 className="text-lg font-medium mb-6 text-center">
-          Parameter Correlation with Defects
-        </h4>
-        
-        <div className="flex justify-center">
-          <div className="w-full max-w-4xl">            {correlationData && correlationData.data.length > 0 ? (
-              <>
-                {/* Debug info - remove in production */}
-                <div className="mb-4 text-xs text-gray-500">
-                  Debug: Found {correlationData.data.length} correlations
-                </div>
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart
-                    data={correlationData.data}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                    layout="horizontal"
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      type="number"
-                      domain={[-1, 1]}
-                      label={{ value: 'Correlation Coefficient', position: 'insideBottom', offset: -10 }}
-                      tick={{ fontSize: 12 }}
-                    />
-                    <YAxis 
-                      type="category"
-                      dataKey="parameter"
-                      tick={{ fontSize: 12 }}
-                      width={150}
-                    />                  <Tooltip content={<CustomCorrelationTooltip />} />
-                  <Bar dataKey="correlation">
-                    {correlationData.data.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={entry.correlation > 0 ? "#ef4444" : "#10b981"}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-              </>
-            ) : (
-              <div className="flex items-center justify-center h-64 text-gray-500">
-                <div className="text-center">
-                  <p>Insufficient sensor data available for correlation analysis</p>
-                  <p className="text-sm mt-2">Need at least 5 records with sensor values and quality decisions</p>
-                  <p className="text-xs mt-1">Available sensors: temperature, speed, squeegeeSpeed, printPressure, inkViscosity</p>
-                </div>
-              </div>
-            )}
-            
-            {correlationData && correlationData.data.length > 0 && (
-              <div className="mt-4 text-sm text-gray-600 text-center">
-                <p>
-                  <span className="inline-block w-4 h-4 bg-red-500 mr-2"></span>
-                  Positive correlation (higher values → more defects)
-                  <span className="inline-block w-4 h-4 bg-green-500 ml-6 mr-2"></span>
-                  Negative correlation (higher values → fewer defects)
-                </p>
-                <p className="mt-2">
-                  Correlation strength: |0.7+| = Strong, |0.3-0.7| = Moderate, |0-0.3| = Weak
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
+          )}        </div>
       </div>
       
       {/* <div className="mt-6 text-sm text-gray-600 text-center">

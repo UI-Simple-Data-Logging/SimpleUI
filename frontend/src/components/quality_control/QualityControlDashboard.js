@@ -5,6 +5,9 @@ import Header from '../common/Header';
 import DataTable from '../common/DataTable';
 import QualityControlForm from './QualityControlForm';
 import QualityControlChart from './QualityControlChart';
+import LiveSensorChart from './LiveSensorChart';
+import LatestSensorValues from './LatestSensorValues';
+import LatestQualityMetrics from './LatestQualityMetrics';
 
 const REFRESH_INTERVAL_SECONDS = 5;
 
@@ -12,14 +15,19 @@ function QualityControlDashboard({ user, onLogout }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
-  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [currentView, setCurrentView] = useState('analytics'); // 'form', 'analytics', 'liveSensors'
 
   const fetchItems = async (showLoading = false) => {
     try {
       if (showLoading) setLoading(true);
       const data = await getItems();
-      const qcData = data.filter(item => item.processType === 'QualityControl');
-      setItems(qcData);
+      // Get all items with sensor data (silvering, streeting, or QualityControl)
+      const sensorData = data.filter(item => 
+        item.processType === 'QualityControl' || 
+        item.processType === 'silvering' || 
+        item.processType === 'streeting'
+      );
+      setItems(sensorData);
       setLastUpdate(new Date());
     } catch (err) {
       toast.error('Failed to fetch data');
@@ -88,10 +96,21 @@ function QualityControlDashboard({ user, onLogout }) {
     } finally {
       setLoading(false);
     }
+  };  const toggleView = () => {
+    // Toggle between current state (analytics/liveSensors) and form
+    if (currentView === 'form') {
+      setCurrentView('analytics'); // Return to analytics by default
+    } else {
+      setCurrentView('form');
+    }
   };
 
-  const toggleView = () => {
-    setShowAnalytics(!showAnalytics);
+  const switchToLiveSensors = () => {
+    setCurrentView('liveSensors');
+  };
+
+  const switchToAnalytics = () => {
+    setCurrentView('analytics');
   };
 
   const tableColumns = [
@@ -141,18 +160,19 @@ function QualityControlDashboard({ user, onLogout }) {
         onLogout={onLogout} 
       />
 
-      <div className="max-w-7xl mx-auto p-6">
-        {/* Toggle Button */}
+      <div className="max-w-7xl mx-auto p-6">        {/* Toggle Button */}
         <div className="mb-6 flex justify-center">
           <button
             onClick={toggleView}
             className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-md"
           >
-            {showAnalytics ? '📝 View Form' : '📊 View Analytics'}
+            {currentView === 'form' ? '📊 View Analytics' : 
+             currentView === 'analytics' ? '� Live Sensors' : 
+             '� View Form'}
           </button>
         </div>
 
-        {!showAnalytics ? (
+        {currentView === 'form' ? (
           /* Form View - Default (Only Form) */
           <div className="flex justify-center">
             <div className="w-full max-w-md">
@@ -162,13 +182,18 @@ function QualityControlDashboard({ user, onLogout }) {
                 existingItems={items}
               />
             </div>
-          </div>
-        ) : (
+          </div>        ) : currentView === 'analytics' ? (
           /* Analytics View */
           <div className="space-y-6">
+            {/* Latest Sensor Values */}
+            <LatestSensorValues 
+              items={items} 
+              onNavigateToLiveSensors={switchToLiveSensors}
+            />
+
             {/* Top Row - Status and Placeholder */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* Placeholder Container */}
+              {/* Additional Information Container */}
               <div className="lg:col-span-3">
                 <div className="bg-white rounded-lg shadow p-4 h-32">
                   <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
@@ -206,14 +231,67 @@ function QualityControlDashboard({ user, onLogout }) {
             </div>
 
             {/* Charts Section */}
-            <QualityControlChart items={items} />
+            <QualityControlChart 
+              items={items.filter(item => item.processType === 'QualityControl')}
+            />
 
             {/* Table Section */}
             <DataTable 
-              items={items}
+              items={items.filter(item => item.processType === 'QualityControl')}
               columns={tableColumns}
               filename="quality_control_data"
             />
+          </div>
+        ) : (
+          /* Live Sensors View */
+          <div className="space-y-6">
+            {/* Latest Quality Metrics */}
+            <LatestQualityMetrics 
+              items={items.filter(item => item.processType === 'QualityControl')} 
+              onViewAnalytics={switchToAnalytics}
+            />
+
+            {/* Top Row - Status and Placeholder */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              {/* Additional Information Container */}
+              <div className="lg:col-span-3">
+                <div className="bg-white rounded-lg shadow p-4 h-32">
+                  <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
+                  <div className="text-sm text-gray-500">
+                    This section is reserved for future functionality and enhancements.
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Info - Compact Top Right */}
+              <div className="lg:col-span-1">
+                <div className="bg-white rounded-lg shadow p-4 h-32">
+                  <h4 className="font-medium text-gray-700 mb-2">Status</h4>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <div className="flex justify-between">
+                      <span>Records:</span>
+                      <span className="font-medium">{items.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Updated:</span>
+                      <span className="font-medium text-xs">{lastUpdate.toLocaleTimeString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span>Refresh:</span>
+                      <span className="font-medium flex items-center gap-1 text-xs">
+                        {loading && (
+                          <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500"></div>
+                        )}
+                        {REFRESH_INTERVAL_SECONDS}s
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Live Sensor Chart Section */}
+            <LiveSensorChart items={items} />
           </div>
         )}
       </div>
