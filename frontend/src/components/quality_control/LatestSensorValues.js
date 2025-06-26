@@ -57,35 +57,35 @@ function LatestSensorValues({ items, onNavigateToLiveSensors }) {
       </div>
       
       {latestSensorData ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {latestSensorData.temperature && (
-            <div className="bg-white rounded p-3 border">
-              <div className="text-xs text-gray-500 mb-1">Temperature</div>
-              <div className="font-semibold text-lg">{latestSensorData.temperature.value.toFixed(1)}{latestSensorData.temperature.unit}</div>
+            <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Temperature</div>
+              <div className="font-bold text-xl text-gray-800">{latestSensorData.temperature.value.toFixed(1)}<span className="text-sm font-normal text-gray-600">{latestSensorData.temperature.unit}</span></div>
             </div>
           )}
           {latestSensorData.speed && (
-            <div className="bg-white rounded p-3 border">
-              <div className="text-xs text-gray-500 mb-1">Speed</div>
-              <div className="font-semibold text-lg">{latestSensorData.speed.value.toFixed(1)}{latestSensorData.speed.unit}</div>
+            <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Speed</div>
+              <div className="font-bold text-xl text-gray-800">{latestSensorData.speed.value.toFixed(1)}<span className="text-sm font-normal text-gray-600">{latestSensorData.speed.unit}</span></div>
             </div>
           )}
           {latestSensorData.squeegeeSpeed && (
-            <div className="bg-white rounded p-3 border">
-              <div className="text-xs text-gray-500 mb-1">Squeegee Speed</div>
-              <div className="font-semibold text-lg">{latestSensorData.squeegeeSpeed.value.toFixed(1)}{latestSensorData.squeegeeSpeed.unit}</div>
+            <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Squeegee Speed</div>
+              <div className="font-bold text-xl text-gray-800">{latestSensorData.squeegeeSpeed.value.toFixed(1)}<span className="text-sm font-normal text-gray-600">{latestSensorData.squeegeeSpeed.unit}</span></div>
             </div>
           )}
           {latestSensorData.printPressure && (
-            <div className="bg-white rounded p-3 border">
-              <div className="text-xs text-gray-500 mb-1">Print Pressure</div>
-              <div className="font-semibold text-lg">{latestSensorData.printPressure.value.toFixed(1)}{latestSensorData.printPressure.unit}</div>
+            <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Print Pressure</div>
+              <div className="font-bold text-xl text-gray-800">{latestSensorData.printPressure.value.toFixed(1)}<span className="text-sm font-normal text-gray-600">{latestSensorData.printPressure.unit}</span></div>
             </div>
           )}
           {latestSensorData.inkViscosity && (
-            <div className="bg-white rounded p-3 border">
-              <div className="text-xs text-gray-500 mb-1">Ink Viscosity</div>
-              <div className="font-semibold text-lg">{latestSensorData.inkViscosity.value.toFixed(1)}{latestSensorData.inkViscosity.unit}</div>
+            <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Ink Viscosity</div>
+              <div className="font-bold text-xl text-gray-800">{latestSensorData.inkViscosity.value.toFixed(1)}<span className="text-sm font-normal text-gray-600">{latestSensorData.inkViscosity.unit}</span></div>
             </div>
           )}
         </div>
