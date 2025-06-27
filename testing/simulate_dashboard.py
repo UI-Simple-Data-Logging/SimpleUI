@@ -23,56 +23,16 @@ TOTAL_RECORDS = 1000
 START_PRODUCT_ID = 1000
 TIME_RANGE_DAYS = 45
 
-# =============================================================================
-# SENSOR RANGES AND DEVICE SOURCES
-# =============================================================================
-
-# Silvering sensor ranges
+# Sensor ranges
 SQUEEGEE_SPEED_RANGE = (25.0, 55.0)  # mm/s
 PRINT_PRESSURE_RANGE = (800.0, 1200.0)  # N/m²
 INK_VISCOSITY_RANGE = (15.0, 35.0)  # cP
 HUMIDITY_RANGE = (40.0, 60.0)  # %
-
-# Streeting sensor ranges  
 TEMPERATURE_RANGE = (30.0, 40.0)  # °C
 SPEED_RANGE = (35.0, 45.0)  # mm/s
 
-# Device sources
-DEVICE_SOURCES = {
-    'squeegeeSpeed': 'clicker',
-    'printPressure': 'load_cell', 
-    'inkViscosity': 'viscometer',
-    'humidity': 'humidity_sensor',
-    'temperature': 'thermometer',
-    'speed': 'encoder'
-}
-
-# =============================================================================
-# QUALITY CONTROL CONFIGURATION
-# =============================================================================
-
 # QC Operators
 QC_OPERATORS = ['Inspector 1', 'Inspector 2', 'Inspector 3']
-
-# QC Process Stations
-QC_PROCESS_STATIONS = ['Silvering', 'Streeting', 'Final Product check']
-
-# QC Decision weights and options
-QC_DECISIONS = ['Yes', 'No', 'Goes to Rework']
-QC_DECISION_WEIGHTS = [0.7, 0.05, 0.25]  # 70% Yes, 5% No, 25% Goes to Rework
-
-# QC Reworkability weights
-QC_REWORKABILITY_OPTIONS = ['Yes', 'No']
-QC_REWORKABILITY_WEIGHTS_REWORK = [0.9, 0.1]  # For "Goes to Rework" decision
-QC_REWORKABILITY_WEIGHTS_NO = [0.5, 0.5]     # For "No" decision
-
-# QC Reworked weights
-QC_REWORKED_OPTIONS = ['Yes', 'No']
-QC_REWORKED_WEIGHTS_HIGH = [0.85, 0.15]  # High reworkability cases
-QC_REWORKED_WEIGHTS_LOW = [0.3, 0.7]     # Other cases
-
-# QC Final decision update weight
-QC_FINAL_DECISION_WEIGHTS = [0.7, 0.2, 0.1]  # 70% Yes, 20% No, 10% stays "Goes to Rework"
 
 # Cause of failure options
 QC_CAUSE_OF_FAILURE_OPTIONS = [
@@ -102,6 +62,42 @@ QC_AFFECTED_OUTPUT_OPTIONS_OTHER = [
     'Other Output 1',
     'Other Output 2',
 ]
+
+# Device sources
+DEVICE_SOURCES = {
+    'squeegeeSpeed': 'clicker',
+    'printPressure': 'load_cell', 
+    'inkViscosity': 'viscometer',
+    'humidity': 'humidity_sensor',
+    'temperature': 'thermometer',
+    'speed': 'encoder'
+}
+
+# =============================================================================
+# QUALITY CONTROL CONFIGURATION
+# =============================================================================
+
+
+# QC Process Stations
+QC_PROCESS_STATIONS = ['Silvering', 'Streeting', 'Final Product check']
+
+# QC Decision weights and options
+QC_DECISIONS = ['Yes', 'No', 'Goes to Rework']
+QC_DECISION_WEIGHTS = [0.7, 0.05, 0.25]  # 70% Yes, 5% No, 25% Goes to Rework
+
+# QC Reworkability weights
+QC_REWORKABILITY_OPTIONS = ['Yes', 'No']
+QC_REWORKABILITY_WEIGHTS_REWORK = [0.9, 0.1]  # For "Goes to Rework" decision
+QC_REWORKABILITY_WEIGHTS_NO = [0.5, 0.5]     # For "No" decision
+
+# QC Reworked weights
+QC_REWORKED_OPTIONS = ['Yes', 'No']
+QC_REWORKED_WEIGHTS_HIGH = [0.85, 0.15]  # High reworkability cases
+QC_REWORKED_WEIGHTS_LOW = [0.3, 0.7]     # Other cases
+
+# QC Final decision update weight
+QC_FINAL_DECISION_WEIGHTS = [0.7, 0.2, 0.1]  # 70% Yes, 20% No, 10% stays "Goes to Rework"
+
 
 # QC Comments options and weights
 QC_COMMENTS_OPTIONS = [
