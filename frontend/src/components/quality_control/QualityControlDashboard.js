@@ -229,8 +229,8 @@ function QualityControlDashboard({ user, onLogout }) {
                 <div className="bg-white rounded-lg shadow p-4 h-40">
                   <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
                   <div className="text-sm text-gray-500">
-                    Announcements will show up here.
-                    All data is artificially injected.
+                    Announcements will show up here.<br />
+                    <b>Note: </b>All data is artificially injected.
                   </div>
                 </div>
               </div>
