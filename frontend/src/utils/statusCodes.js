@@ -141,7 +141,8 @@ const getSensorName = (sensorCode) => {
     '2': 'Load Cell (Print Pressure)',
     '3': 'Viscometer (Ink Viscosity)',
     '4': 'Thermometer (Temperature)',
-    '5': 'Encoder (Speed)'
+    '5': 'Encoder (Speed)',
+    '6': 'Humidity Sensor (Humidity)'
   };
   
   return sensorMap[sensorCode] || 'Unknown';

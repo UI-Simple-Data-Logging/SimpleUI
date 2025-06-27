@@ -14,6 +14,7 @@ SPEED_RANGE = (30.0, 50.0)  # mm/s - Production speed range
 SQUEEGEE_SPEED_RANGE = (20.0, 40.0)  # mm/s - Squeegee speed range
 PRINT_PRESSURE_RANGE = (8000.0, 12000.0)  # N/m² - Print pressure range
 INK_VISCOSITY_RANGE = (15.0, 25.0)  # cP - Ink viscosity range
+HUMIDITY_RANGE = (40.0, 60.0)  # % - Humidity range
 
 # ===== DEVICE SOURCES =====
 DEVICE_SOURCES = {
@@ -21,7 +22,8 @@ DEVICE_SOURCES = {
     'speed': ['encoder', 'optical_sensor', 'manual'],
     'squeegee_speed': ['encoder', 'speed_sensor'],
     'print_pressure': ['pressure_sensor', 'force_gauge'],
-    'ink_viscosity': ['viscometer', 'rheometer']
+    'ink_viscosity': ['viscometer', 'rheometer'],
+    'humidity': ['humidity_sensor', 'hygrometer']
 }
 
 # ===== OPERATORS AND PROCESS TYPES =====
@@ -58,6 +60,11 @@ def generate_sensor_payload():
     base_viscosity = random.uniform(*INK_VISCOSITY_RANGE)
     ink_viscosity = base_viscosity * (1 - visc_temp_factor * 0.15)  # Lower viscosity at higher temps
     
+    # Humidity might be affected by temperature (higher temp = slightly lower humidity)
+    base_humidity = random.uniform(*HUMIDITY_RANGE)
+    humidity_temp_factor = (base_temp - TEMPERATURE_RANGE[0]) / (TEMPERATURE_RANGE[1] - TEMPERATURE_RANGE[0])
+    humidity_value = base_humidity * (1 - humidity_temp_factor * 0.1)  # Up to 10% reduction at high temps
+    
     # Select process type and corresponding status code
     process_type = random.choice(PROCESS_TYPES)
     status_code = STATUS_CODES[process_type]
@@ -90,6 +97,11 @@ def generate_sensor_payload():
             "unit": "cP",
             "deviceSource": random.choice(DEVICE_SOURCES['ink_viscosity'])
         },
+        "humidity": {
+            "value": round(humidity_value, 1),
+            "unit": "%",
+            "deviceSource": random.choice(DEVICE_SOURCES['humidity'])
+        },
         "operator": random.choice(TEST_OPERATORS),
         "timestamp": datetime.now().isoformat()
     }
@@ -109,7 +121,8 @@ def make_post_request(payload):
             print(f"✅ Sensor data logged - ID: {data.get('_id', 'Unknown')}")
             print(f"   🌡️  Temp: {payload['temperature']['value']}°C | "
                   f"⚡ Speed: {payload['speed']['value']}mm/s | "
-                  f"💧 Visc: {payload['inkViscosity']['value']}cP")
+                  f"💧 Visc: {payload['inkViscosity']['value']}cP | "
+                  f"💨 Humidity: {payload['humidity']['value']}%")
             print(f"   🔧 Process: {payload['processType']} (Status: {payload['statusCode']}) | "
                   f"👤 Operator: {payload['operator']}")
             return True
@@ -155,6 +168,7 @@ def main():
     print(f"Speed: {SPEED_RANGE[0]} to {SPEED_RANGE[1]} mm/s")
     print(f"Pressure: {PRINT_PRESSURE_RANGE[0]} to {PRINT_PRESSURE_RANGE[1]} N/m²")
     print(f"Viscosity: {INK_VISCOSITY_RANGE[0]} to {INK_VISCOSITY_RANGE[1]} cP")
+    print(f"Humidity: {HUMIDITY_RANGE[0]} to {HUMIDITY_RANGE[1]} %")
     print("=" * 50)
     
     # Test API connection first

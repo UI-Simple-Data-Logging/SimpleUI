@@ -12,7 +12,8 @@ function LatestSensorValues({ items, onNavigateToLiveSensors }) {
         item.speed?.value || 
         item.squeegeeSpeed?.value || 
         item.printPressure?.value || 
-        item.inkViscosity?.value
+        item.inkViscosity?.value ||
+        item.humidity?.value
       ))
       .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     
@@ -40,6 +41,10 @@ function LatestSensorValues({ items, onNavigateToLiveSensors }) {
       inkViscosity: latest.inkViscosity?.value ? {
         value: parseFloat(latest.inkViscosity.value),
         unit: latest.inkViscosity.unit || 'cP'
+      } : null,
+      humidity: latest.humidity?.value ? {
+        value: parseFloat(latest.humidity.value),
+        unit: latest.humidity.unit || '%'
       } : null
     };
   }, [items]);
@@ -57,7 +62,7 @@ function LatestSensorValues({ items, onNavigateToLiveSensors }) {
       </div>
       
       {latestSensorData ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           {latestSensorData.temperature && (
             <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
               <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Temperature</div>
@@ -86,6 +91,12 @@ function LatestSensorValues({ items, onNavigateToLiveSensors }) {
             <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
               <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Ink Viscosity</div>
               <div className="font-bold text-xl text-gray-800">{latestSensorData.inkViscosity.value.toFixed(1)}<span className="text-sm font-normal text-gray-600">{latestSensorData.inkViscosity.unit}</span></div>
+            </div>
+          )}
+          {latestSensorData.humidity && (
+            <div className="bg-white rounded-lg p-4 border shadow-sm hover:shadow-md transition-shadow">
+              <div className="text-xs text-gray-500 mb-2 font-medium uppercase tracking-wide">Humidity</div>
+              <div className="font-bold text-xl text-gray-800">{latestSensorData.humidity.value.toFixed(1)}<span className="text-sm font-normal text-gray-600">{latestSensorData.humidity.unit}</span></div>
             </div>
           )}
         </div>

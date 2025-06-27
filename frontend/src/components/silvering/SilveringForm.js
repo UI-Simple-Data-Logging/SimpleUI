@@ -7,6 +7,7 @@ function SilveringForm({ onSubmit, loading }) {
     squeegeeSpeed: '',
     printPressure: '',
     inkViscosity: '',
+    humidity: '',
     priority: 'M',
     targetMetricAffected: []
   });
@@ -22,13 +23,14 @@ function SilveringForm({ onSubmit, loading }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.squeegeeSpeed.trim() || !formData.printPressure.trim() || !formData.inkViscosity.trim()) return;
+    if (!formData.squeegeeSpeed.trim() || !formData.printPressure.trim() || !formData.inkViscosity.trim() || !formData.humidity.trim()) return;
 
     onSubmit(formData);
     setFormData({
       squeegeeSpeed: '',
       printPressure: '',
       inkViscosity: '',
+      humidity: '',
       priority: 'M',
       targetMetricAffected: []
     });
@@ -75,6 +77,22 @@ function SilveringForm({ onSubmit, loading }) {
             value={formData.inkViscosity}
             onChange={(e) => setFormData({ ...formData, inkViscosity: e.target.value })}
             placeholder="Enter ink viscosity"
+            className="w-full p-2 border rounded"
+            required
+            disabled={loading}
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Humidity (%) *</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            value={formData.humidity}
+            onChange={(e) => setFormData({ ...formData, humidity: e.target.value })}
+            placeholder="Enter humidity percentage"
             className="w-full p-2 border rounded"
             required
             disabled={loading}

@@ -10,10 +10,11 @@ import autoTable from 'jspdf-autotable';
 
 const SENSOR_RANGES = {
   temperature: { min: 0, max: 100, unit: '°C', color: '#ef4444', offset: 0 },
-  speed: { min: -150, max: -50, unit: 'mm/s', color: '#3b82f6', offset: -150 },
-  squeegeeSpeed: { min: -300, max: -200, unit: 'mm/s', color: '#10b981', offset: -300 },
-  printPressure: { min: -450, max: -350, unit: 'N/m²', color: '#f59e0b', offset: -450 },
-  inkViscosity: { min: -600, max: -500, unit: 'cP', color: '#8b5cf6', offset: -600 }
+  speed: { min: -180, max: -80, unit: 'mm/s', color: '#3b82f6', offset: -180 },
+  squeegeeSpeed: { min: -360, max: -260, unit: 'mm/s', color: '#10b981', offset: -360 },
+  printPressure: { min: -540, max: -440, unit: 'N/m²', color: '#f59e0b', offset: -540 },
+  inkViscosity: { min: -720, max: -620, unit: 'cP', color: '#8b5cf6', offset: -720 },
+  humidity: { min: -900, max: -800, unit: '%', color: '#06b6d4', offset: -900 }
 };
 
 const DEFAULT_THRESHOLDS = {
@@ -21,7 +22,8 @@ const DEFAULT_THRESHOLDS = {
   speed: { min: 30, max: 50 },
   squeegeeSpeed: { min: 20, max: 40 },
   printPressure: { min: 8000, max: 12000 },
-  inkViscosity: { min: 12, max: 28 }
+  inkViscosity: { min: 12, max: 28 },
+  humidity: { min: 40, max: 60 }
 };
 
 function LiveSensorChart({ items }) {
@@ -60,7 +62,7 @@ function LiveSensorChart({ items }) {
       return;
     }
 
-    const headers = ['Timestamp', 'Temperature (°C)', 'Speed (mm/s)', 'Squeegee Speed (mm/s)', 'Print Pressure (N/m²)', 'Ink Viscosity (cP)', 'Alerts'];
+    const headers = ['Timestamp', 'Temperature (°C)', 'Speed (mm/s)', 'Squeegee Speed (mm/s)', 'Print Pressure (N/m²)', 'Ink Viscosity (cP)', 'Humidity (%)', 'Alerts'];
     
     const csvData = dataToExport.map(item => {
       const timestamp = new Date(item.timestamp).toLocaleString();
@@ -69,6 +71,7 @@ function LiveSensorChart({ items }) {
       const squeegeeSpeed = item.squeegeeSpeed?.value || '';
       const printPressure = item.printPressure?.value || '';
       const inkViscosity = item.inkViscosity?.value || '';
+      const humidity = item.humidity?.value || '';
       
       // Check for alerts for this record
       const alerts = [];
@@ -80,6 +83,7 @@ function LiveSensorChart({ items }) {
           case 'squeegeeSpeed': value = parseFloat(squeegeeSpeed); break;
           case 'printPressure': value = parseFloat(printPressure); break;
           case 'inkViscosity': value = parseFloat(inkViscosity); break;
+          case 'humidity': value = parseFloat(humidity); break;
           default: value = null; break;
         }
         if (value && (value < threshold.min || value > threshold.max)) {
@@ -87,7 +91,7 @@ function LiveSensorChart({ items }) {
         }
       });
       
-      return [timestamp, temp, speed, squeegeeSpeed, printPressure, inkViscosity, alerts.join('; ')];
+      return [timestamp, temp, speed, squeegeeSpeed, printPressure, inkViscosity, humidity, alerts.join('; ')];
     });
 
     const csvContent = [headers, ...csvData]
@@ -233,6 +237,7 @@ function LiveSensorChart({ items }) {
             case 'squeegeeSpeed': actualMin = 15; actualMax = 45; break;
             case 'printPressure': actualMin = 7000; actualMax = 13000; break;
             case 'inkViscosity': actualMin = 10; actualMax = 30; break;
+            case 'humidity': actualMin = 30; actualMax = 70; break;
             default: return null;
           }
 
@@ -245,7 +250,8 @@ function LiveSensorChart({ items }) {
           speed: parseFloat(item.speed.value),
           squeegeeSpeed: item.squeegeeSpeed?.value ? parseFloat(item.squeegeeSpeed.value) : null,
           printPressure: item.printPressure?.value ? parseFloat(item.printPressure.value) : null,
-          inkViscosity: item.inkViscosity?.value ? parseFloat(item.inkViscosity.value) : null
+          inkViscosity: item.inkViscosity?.value ? parseFloat(item.inkViscosity.value) : null,
+          humidity: item.humidity?.value ? parseFloat(item.humidity.value) : null
         };
 
         const dataPoint = {
@@ -395,7 +401,7 @@ function LiveSensorChart({ items }) {
               tick={{ fontSize: 11 }}
               tickMargin={10}
             />
-            <YAxis domain={[-600, 100]} tickFormatter={formatYTick} />
+            <YAxis domain={[-850, 100]} tickFormatter={formatYTick} />
             <Tooltip content={<CustomTooltip />} />
             <Legend 
               verticalAlign="top" 

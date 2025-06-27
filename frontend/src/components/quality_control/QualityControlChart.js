@@ -25,7 +25,7 @@ const REWORK_SUCCESS_COLORS = {
   'No': '#ef4444'        // Red
 };
 
-function QualityControlChart({ items }) {
+function QualityControlChart({ items, timeFilter, timeRange }) {
   // State for toggling between pass rate and defect rate
   const [showPassRate, setShowPassRate] = useState(false);
   // Memoize expensive calculations to improve performance
@@ -125,7 +125,7 @@ function QualityControlChart({ items }) {
     }))
     .sort((a, b) => b.count - a.count); // Sort by count descending
 
-  // Prepare affected output data
+  // Prepare failure classification data
   const affectedOutputCounts = items.reduce((acc, item) => {
     if (item.affectedOutput && Array.isArray(item.affectedOutput)) {
       item.affectedOutput.forEach(output => {
@@ -148,7 +148,7 @@ function QualityControlChart({ items }) {
     item.causeOfFailure && Array.isArray(item.causeOfFailure) ? item.causeOfFailure : []
   ))];
 
-  // Get all unique affected outputs
+  // Get all unique failure classifications
   const allOutputs = [...new Set(items.flatMap(item => 
     item.affectedOutput && Array.isArray(item.affectedOutput) ? item.affectedOutput : []
   ))];
@@ -172,7 +172,7 @@ function QualityControlChart({ items }) {
     return dataPoint;
   });
 
-  // Prepare affected output data by operator (grouped bar chart format)
+  // Prepare failure classification data by operator (grouped bar chart format)
   const affectedOutputByOperatorData = allOperators.map(operator => {
     const operatorItems = items.filter(item => item.operator === operator);
     const operatorOutputCounts = operatorItems.reduce((acc, item) => {
@@ -295,15 +295,35 @@ function QualityControlChart({ items }) {
       );
       
       if (filteredItems.length === 0) return [];
-        const values = filteredItems.map(item => parseFloat(item[field].value));
+      
+      const values = filteredItems.map(item => parseFloat(item[field].value));
       const minVal = Math.min(...values);
+      const maxVal = Math.max(...values);
+      const range = maxVal - minVal;
+      
+      // If range is too small or there's only one unique value, return single bin
+      if (range === 0) {
+        return [{
+          bin: `${minVal.toFixed(1)}`,
+          binStart: minVal,
+          defectRate: (filteredItems.filter(item => item.decision === 'No' || item.decision === 'Goes to Rework').length / filteredItems.length) * 100,
+          passRate: (filteredItems.filter(item => item.decision === 'Yes').length / filteredItems.length) * 100,
+          totalSamples: filteredItems.length
+        }];
+      }
+      
+      // Adjust bin size if it's too large for the data range
+      let adjustedBinSize = binSize;
+      if (range < binSize) {
+        adjustedBinSize = range / 5; // Create 5 bins for small ranges
+      }
       
       const bins = {};
       
       filteredItems.forEach(item => {
         const value = parseFloat(item[field].value);
-        const binStart = Math.floor((value - minVal) / binSize) * binSize + minVal;
-        const binEnd = binStart + binSize;
+        const binStart = Math.floor((value - minVal) / adjustedBinSize) * adjustedBinSize + minVal;
+        const binEnd = binStart + adjustedBinSize;
         const binLabel = `${binStart.toFixed(1)}-${binEnd.toFixed(1)}`;
         
         if (!bins[binLabel]) {
@@ -331,10 +351,11 @@ function QualityControlChart({ items }) {
       temperatureBinData: createBinnedData(items, 'temperature', 2), // 2°C bins
       speedBinData: createBinnedData(items, 'speed', 5), // 5 mm/s bins
       squeegeeSpeedBinData: createBinnedData(items, 'squeegeeSpeed', 5), // 5 mm/s bins
-      printPressureBinData: createBinnedData(items, 'printPressure', 1000), // 1000 N/m² bins
-      inkViscosityBinData: createBinnedData(items, 'inkViscosity', 2) // 2 cP bins
+      printPressureBinData: createBinnedData(items, 'printPressure', 10), // 10 N/m² bins
+      inkViscosityBinData: createBinnedData(items, 'inkViscosity', 2), // 2 cP bins
+      humidityBinData: createBinnedData(items, 'humidity', 5) // 5% bins
     };  }, [items]);
-  const { temperatureBinData, speedBinData, squeegeeSpeedBinData, printPressureBinData, inkViscosityBinData } = binnedAnalysisData;
+  const { temperatureBinData, speedBinData, squeegeeSpeedBinData, printPressureBinData, inkViscosityBinData, humidityBinData } = binnedAnalysisData;
 
 const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {
@@ -493,13 +514,33 @@ const CustomTooltip = ({ active, payload }) => {
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-lg font-semibold mb-4">📊 Quality Control Analytics</h3>
         <div className="flex items-center justify-center h-64 text-gray-500">
-          No data available for charts
+          {timeFilter && timeFilter !== 'all' 
+            ? `No quality control data available for the selected time range (${timeRange}).`
+            : 'No data available for charts'
+          }
         </div>
       </div>
     );
-  }  return (
+  }
+
+  return (
     <div className="bg-white rounded-lg shadow p-6">
-      <h3 className="text-lg font-semibold mb-4">📊 Quality Control Analytics</h3>
+      {/* Header with Filter Info */}
+      <div className="mb-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold">📊 Quality Control Analytics</h3>
+          {timeFilter && timeFilter !== 'all' && (
+            <div className="text-sm text-gray-600 bg-blue-50 px-3 py-1 rounded-lg">
+              📊 {timeRange} ({items.length} records)
+            </div>
+          )}
+        </div>
+        {timeFilter && timeFilter !== 'all' && (
+          <p className="text-sm text-gray-500">
+            Analytics based on quality control data from {timeRange.toLowerCase()}.
+          </p>
+        )}
+      </div>
       
       {/* Top Row - Yield and Reworked Success Charts */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -687,9 +728,9 @@ const CustomTooltip = ({ active, payload }) => {
           )}
         </div>
 
-        {/* Affected Output Chart */}
+        {/* Failure Classification Chart */}
         <div>
-          <h4 className="text-md font-medium mb-2 text-center">Affected Output Distribution</h4>
+          <h4 className="text-md font-medium mb-2 text-center">Failure Classification Distribution</h4>
           {affectedOutputData.length > 0 ? (
             <ResponsiveContainer width="100%" height={300}>
               <BarChart
@@ -712,7 +753,7 @@ const CustomTooltip = ({ active, payload }) => {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-64 text-gray-500">
-              No affected output data available
+              No failure classification data available
             </div>
           )}        </div>
       </div>      {/* New Charts Row - Operator-Based Analysis */}
@@ -752,10 +793,10 @@ const CustomTooltip = ({ active, payload }) => {
         </div>
       </div>
 
-      {/* Affected Output Distribution by Operator */}
+      {/* Failure Classification Distribution by Operator */}
       <div className="mt-8">
         <div>
-          <h4 className="text-md font-medium mb-2 text-center">Affected Output by Operator</h4>
+          <h4 className="text-md font-medium mb-2 text-center">Failure Classification by Operator</h4>
           {affectedOutputByOperatorData.length > 0 && allOutputs.length > 0 ? (
             <ResponsiveContainer width="100%" height={350}>
               <BarChart
@@ -782,7 +823,7 @@ const CustomTooltip = ({ active, payload }) => {
             </ResponsiveContainer>
           ) : (
             <div className="flex items-center justify-center h-64 text-gray-500">
-              No affected output data by operator available
+              No failure classification data by operator available
             </div>
           )}        </div>
       </div>
@@ -1098,6 +1139,44 @@ const CustomTooltip = ({ active, payload }) => {
                   <Bar 
                     dataKey={showPassRate ? "passRate" : "defectRate"}
                     fill={showPassRate ? "#10b981" : "#06b6d4"}
+                    fillOpacity={0.8}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+
+          {/* Humidity Binned Analysis */}
+          {humidityBinData.length > 0 && (
+            <div>
+              <h5 className="text-md font-medium mb-2 text-center">
+                {showPassRate ? 'Pass Rate' : 'Defect Rate'} vs Humidity
+              </h5>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart
+                  data={humidityBinData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    dataKey="bin" 
+                    tick={{ fontSize: 9 }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                  />
+                  <YAxis 
+                    label={{ 
+                      value: `${showPassRate ? 'Pass Rate' : 'Defect Rate'} (%)`, 
+                      angle: -90, 
+                      position: 'insideLeft' 
+                    }}
+                    tick={{ fontSize: 10 }}
+                  />
+                  <Tooltip content={<CustomBinnedTooltip />} />
+                  <Bar 
+                    dataKey={showPassRate ? "passRate" : "defectRate"}
+                    fill={showPassRate ? "#10b981" : "#14b8a6"}
                     fillOpacity={0.8}
                   />
                 </BarChart>

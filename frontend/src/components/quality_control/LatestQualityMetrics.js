@@ -1,14 +1,13 @@
 import React, { useMemo } from 'react';
 
-function LatestQualityMetrics({ items, onViewAnalytics }) {
+function LatestQualityMetrics({ items, onViewAnalytics, timeFilter }) {
   // Calculate latest quality metrics
   const qualityMetrics = useMemo(() => {
     if (!items || items.length === 0) return null;
 
-    // Get recent items (last 50 or all if less than 50)
+    // Use all filtered items (no limit, based on time filter)
     const recentItems = items
-      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-      .slice(0, 50);
+      .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
     // Calculate yield data (only Yes and No from decision field)
     const yieldCounts = recentItems.reduce((acc, item) => {
@@ -44,7 +43,8 @@ function LatestQualityMetrics({ items, onViewAnalytics }) {
       totalReworked,
       reworkSuccessCount: reworkedSuccessCounts['Yes'] || 0,
       reworkFailCount: reworkedSuccessCounts['No'] || 0,
-      lastUpdate: recentItems.length > 0 ? new Date(recentItems[0].timestamp) : new Date()
+      lastUpdate: recentItems.length > 0 ? new Date(recentItems[0].timestamp) : new Date(),
+      totalRecords: recentItems.length
     };
   }, [items]);
 
@@ -118,7 +118,7 @@ function LatestQualityMetrics({ items, onViewAnalytics }) {
       
       {qualityMetrics && (
         <div className="text-xs text-gray-400 mt-2 text-center">
-          Based on last {Math.min(50, items.length)} records • Last updated: {qualityMetrics.lastUpdate.toLocaleString()}
+          Based on {qualityMetrics.totalRecords} records • Last updated: {qualityMetrics.lastUpdate.toLocaleString()}
         </div>
       )}
     </div>

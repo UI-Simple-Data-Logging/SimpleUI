@@ -24,7 +24,7 @@ function LoginPage({ onLogin }) {
       <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🔧 Simple Data Logging
+            Data Logging Interface
           </h1>
           <p className="text-gray-600">Please login to continue</p>
         </div>

@@ -10,6 +10,7 @@ router.post('/', async (req, res) => {
       squeegeeSpeed,
       printPressure,
       inkViscosity,
+      humidity,
       temperature,
       speed,
       processStation,
@@ -31,7 +32,7 @@ router.post('/', async (req, res) => {
 
     // Silvering validation
     if (processType === 'Silvering') {
-      if (!squeegeeSpeed?.value || !printPressure?.value || !inkViscosity?.value) {
+      if (!squeegeeSpeed?.value || !printPressure?.value || !inkViscosity?.value || !humidity?.value) {
         throw new Error('Missing required silvering sensor values');
       }
     }
@@ -60,6 +61,7 @@ router.post('/', async (req, res) => {
       squeegeeSpeed,
       printPressure,
       inkViscosity,
+      humidity,
       temperature,
       speed,
       processStation,

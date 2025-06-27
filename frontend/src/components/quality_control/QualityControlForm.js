@@ -19,8 +19,8 @@ const AFFECTED_OUTPUT_OPTIONS = [
   'Other'
 ];
 
-// Mapping for auto-selection of affected output based on cause of failure
-// Format: { cause: ['affectedOutput1', 'affectedOutput2', ...] }
+// Mapping for auto-selection of failure classification based on cause of failure
+// Format: { cause: ['failureClassification1', 'failureClassification2', ...] }
 const CAUSE_TO_OUTPUT_MAPPING = {
   'Voids': ['No Conductivity and circuitry', 'Reliability']
 };
@@ -112,21 +112,20 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
       ? formData.causeOfFailure.filter(c => c !== cause)
       : [...formData.causeOfFailure, cause];
 
-    // Auto-select affected outputs based on causes
-    let autoAffectedOutputs = [];
-    newCauses.forEach(cause => {
-      if (CAUSE_TO_OUTPUT_MAPPING[cause]) {
-        autoAffectedOutputs = [...autoAffectedOutputs, ...CAUSE_TO_OUTPUT_MAPPING[cause]];
+    // Auto-select failure classifications based on causes
+    let autoFailureClassifications = [];
+    newCauses.forEach(cause => {      if (CAUSE_TO_OUTPUT_MAPPING[cause]) {
+        autoFailureClassifications = [...autoFailureClassifications, ...CAUSE_TO_OUTPUT_MAPPING[cause]];
       }
     });
-    
+
     // Remove duplicates
-    autoAffectedOutputs = [...new Set(autoAffectedOutputs)];
+    autoFailureClassifications = [...new Set(autoFailureClassifications)];
 
     setFormData(prev => ({
       ...prev,
       causeOfFailure: newCauses,
-      affectedOutput: autoAffectedOutputs,
+      affectedOutput: autoFailureClassifications,
       // Clear custom cause if "Other" is deselected
       customCauseOfFailure: cause === 'Other' && !newCauses.includes('Other') ? '' : prev.customCauseOfFailure
     }));
@@ -155,7 +154,7 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
   };
 
   const validateForm = () => {
-    const errors = {};    // If decision is "No", cause of failure and affected output are required
+    const errors = {};    // If decision is "No", cause of failure and failure classification are required
     if (formData.decision === 'No') {
       if (formData.causeOfFailure.length === 0) {
         errors.causeOfFailure = 'At least one cause of failure must be selected when decision is No';
@@ -164,9 +163,9 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
       }
       
       if (formData.affectedOutput.length === 0) {
-        errors.affectedOutput = 'At least one affected output must be selected when decision is No';
+        errors.affectedOutput = 'At least one failure classification must be selected when decision is No';
       } else if (formData.affectedOutput.includes('Other') && !formData.customAffectedOutput.trim()) {
-        errors.affectedOutput = 'Please specify the other affected output';
+        errors.affectedOutput = 'Please specify the other failure classification';
       }
     }
 
@@ -185,7 +184,7 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
     }
     
     if (formData.affectedOutput.includes('Other') && !formData.customAffectedOutput.trim()) {
-      errors.affectedOutput = 'Please specify the other affected output';
+      errors.affectedOutput = 'Please specify the other failure classification';
     }
 
     setValidationErrors(errors);
@@ -309,18 +308,22 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Decision *</label>
           <div className="flex gap-4">
-            {['Yes', 'No', 'Goes to Rework'].map(option => (
-              <label key={option} className="flex items-center">
+            {[
+              { value: 'Yes', label: 'Pass' },
+              { value: 'No', label: 'Fail' },
+              { value: 'Goes to Rework', label: 'Goes to Rework' }
+            ].map(option => (
+              <label key={option.value} className="flex items-center">
                 <input
                   type="radio"
                   name="decision"
-                  value={option}
-                  checked={formData.decision === option}
+                  value={option.value}
+                  checked={formData.decision === option.value}
                   onChange={(e) => handleDecisionChange(e.target.value)}
                   className="mr-2"
                   disabled={loading}
                 />
-                {option}
+                {option.label}
               </label>
             ))}
           </div>
@@ -345,18 +348,21 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Reworkability *</label>
             <div className="flex gap-4">
-              {['Yes', 'No'].map(option => (
-                <label key={option} className="flex items-center">
+              {[
+                { value: 'Yes', label: 'Reworkable' },
+                { value: 'No', label: 'Not Reworkable' }
+              ].map(option => (
+                <label key={option.value} className="flex items-center">
                   <input
                     type="radio"
                     name="reworkability"
-                    value={option}
-                    checked={formData.reworkability === option}
+                    value={option.value}
+                    checked={formData.reworkability === option.value}
                     onChange={(e) => setFormData({ ...formData, reworkability: e.target.value })}
                     className="mr-2"
                     disabled={loading}
                   />
-                  {option}
+                  {option.label}
                 </label>
               ))}
             </div>
@@ -430,11 +436,11 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
           </div>
         )}
 
-        {/* Affected Output - Conditional */}
+        {/* Failure Classification - Conditional */}
         {showAffectedOutput && (
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Affected Output {formData.decision === 'No' && <span className="text-red-500">*</span>}
+              Failure Classification {formData.decision === 'No' && <span className="text-red-500">*</span>}
               <span className="text-xs text-gray-500 ml-2">(Auto-selected based on cause)</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -456,17 +462,17 @@ function QualityControlForm({ onSubmit, loading, existingItems }) {  const [form
             {validationErrors.affectedOutput && (
               <p className="text-red-500 text-sm mt-1">{validationErrors.affectedOutput}</p>
             )}
-            {/* Custom Affected Output Input */}
+            {/* Custom Failure Classification Input */}
             {formData.affectedOutput.includes('Other') && (
               <div className="mt-3">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Specify Other Affected Output
+                  Specify Other Failure Classification
                 </label>
                 <input
                   type="text"
                   value={formData.customAffectedOutput}
                   onChange={(e) => setFormData({ ...formData, customAffectedOutput: e.target.value })}
-                  placeholder="Enter specific affected output"
+                  placeholder="Enter specific failure classification"
                   className="w-full p-2 border rounded"
                   disabled={loading}
                 />

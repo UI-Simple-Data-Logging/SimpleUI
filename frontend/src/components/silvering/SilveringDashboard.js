@@ -4,7 +4,7 @@ import { toast } from 'react-toastify';
 import Header from '../common/Header';
 import DataTable from '../common/DataTable';
 import SilveringForm from './SilveringForm';
-import { PREDEFINED_CODES } from '../../utils/statusCodes';
+// import { PREDEFINED_CODES } from '../../utils/statusCodes';
 
 const REFRESH_INTERVAL_SECONDS = 5;
 
@@ -54,6 +54,11 @@ function SilveringDashboard({ user, onLogout }) {
         unit: 'cP',
         deviceSource: formData.deviceSource
       },
+      humidity: {
+        value: formData.humidity,
+        unit: '%',
+        deviceSource: formData.deviceSource
+      },
       priority: formData.priority,
       targetMetricAffected: formData.targetMetricAffected,
       operator: user.username,
@@ -83,6 +88,7 @@ function SilveringDashboard({ user, onLogout }) {
     { header: 'Squeegee Speed', accessor: (item) => item.squeegeeSpeed?.value + ' ' + item.squeegeeSpeed?.unit },
     { header: 'Print Pressure', accessor: (item) => item.printPressure?.value + ' ' + item.printPressure?.unit },
     { header: 'Ink Viscosity', accessor: (item) => item.inkViscosity?.value + ' ' + item.inkViscosity?.unit },
+    { header: 'Humidity', accessor: (item) => item.humidity?.value + ' ' + item.humidity?.unit },
     { header: 'Device Source', accessor: (item) => item.squeegeeSpeed?.deviceSource || 'N/A' },
     { header: 'Priority', accessor: (item) => item.priority },
     { header: 'Metrics Affected', accessor: (item) => (item.targetMetricAffected || []).join(', ') },

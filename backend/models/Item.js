@@ -20,6 +20,7 @@ const mongoose = require('mongoose');
  * - 3: Viscometer (Ink Viscosity)
  * - 4: Thermometer (Temperature)
  * - 5: Encoder (Speed)
+ * - 6: Humidity Sensor (Humidity)
  * 
  * Fourth digit (W): Parameter Index
  * - 0: Single parameter or general
@@ -51,6 +52,11 @@ const itemSchema = new mongoose.Schema({
     value: { type: Number },
     unit: { type: String, default: 'cP' },
     deviceSource: { type: String, default: 'viscometer' }
+  },
+  humidity: {
+    value: { type: Number },
+    unit: { type: String, default: '%' },
+    deviceSource: { type: String, default: 'humidity_sensor' }
   },
 
   // Streeting fields

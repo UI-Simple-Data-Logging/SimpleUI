@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { getItems, createItem, updateItem } from '../../utils/api';
 import { toast } from 'react-toastify';
 import Header from '../common/Header';
@@ -8,6 +8,9 @@ import QualityControlChart from './QualityControlChart';
 import LiveSensorChart from './LiveSensorChart';
 import LatestSensorValues from './LatestSensorValues';
 import LatestQualityMetrics from './LatestQualityMetrics';
+import TimeFilter from './TimeFilter';
+import FilteredDataSummary from './FilteredDataSummary';
+import { filterItemsByTimeRange, getFilteredItemsInfo } from '../../utils/timeFiltering';
 
 const REFRESH_INTERVAL_SECONDS = 5;
 
@@ -16,6 +19,21 @@ function QualityControlDashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [currentView, setCurrentView] = useState('form'); // 'form', 'analytics', 'liveSensors'
+  const [timeFilter, setTimeFilter] = useState('day'); // Default to last 24 hours
+
+  // Memoize filtered items to avoid recalculating on every render
+  const filteredItems = useMemo(() => {
+    return filterItemsByTimeRange(items, timeFilter);
+  }, [items, timeFilter]);
+
+  const handleTimeFilterChange = (newFilter) => {
+    setTimeFilter(newFilter);
+  };
+
+  // Get filtered items info for display
+  const filteredItemsInfo = useMemo(() => {
+    return getFilteredItemsInfo(items, filteredItems, timeFilter);
+  }, [items, filteredItems, timeFilter]);
 
   const fetchItems = async (showLoading = false) => {
     try {
@@ -123,11 +141,19 @@ function QualityControlDashboard({ user, onLogout }) {
     },
     {
       header: 'Decision',
-      accessor: (item) => item.decision || 'N/A'
+      accessor: (item) => {
+        if (item.decision === 'Yes') return 'Pass';
+        if (item.decision === 'No') return 'Fail';
+        return item.decision || 'N/A';
+      }
     },
     {
       header: 'Reworkability',
-      accessor: (item) => item.reworkability || 'N/A'
+      accessor: (item) => {
+        if (item.reworkability === 'Yes') return 'Reworkable';
+        if (item.reworkability === 'No') return 'Not Reworkable';
+        return item.reworkability || 'N/A';
+      }
     },
     {
       header: 'Reworked',
@@ -138,7 +164,7 @@ function QualityControlDashboard({ user, onLogout }) {
       accessor: (item) => (item.causeOfFailure || []).join(', ') || 'None'
     },
     {
-      header: 'Affected Output',
+      header: 'Failure Classification',
       accessor: (item) => (item.affectedOutput || []).join(', ') || 'None'
     },
     {
@@ -159,10 +185,10 @@ function QualityControlDashboard({ user, onLogout }) {
         onLogout={onLogout} 
       />
 
-      <div className="max-w-7xl mx-auto p-6">        {/* Toggle Button */}
-        <div className="mb-6 flex justify-center">          <button
+      <div className="max-w-7xl mx-auto p-4 sm:p-6">        {/* Toggle Button */}
+        <div className="mb-4 sm:mb-6 flex justify-center">          <button
             onClick={toggleView}
-            className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-md"
+            className="px-4 sm:px-6 py-2 sm:py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200 font-medium shadow-md text-sm sm:text-base"
           >
             {currentView === 'form' ? '📊 View Analytics' : '📝 View Form'}
           </button>
@@ -170,8 +196,8 @@ function QualityControlDashboard({ user, onLogout }) {
 
         {currentView === 'form' ? (
           /* Form View - Default (Only Form) */
-          <div className="flex justify-center">
-            <div className="w-full max-w-md">
+          <div className="flex justify-center px-2 sm:px-0">
+            <div className="w-full max-w-lg sm:max-w-md">
               <QualityControlForm 
                 onSubmit={handleSubmit} 
                 loading={loading} 
@@ -180,39 +206,66 @@ function QualityControlDashboard({ user, onLogout }) {
             </div>
           </div>        ) : currentView === 'analytics' ? (
           /* Analytics View */
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
+            {/* Time Filter */}
+            <TimeFilter 
+              selectedFilter={timeFilter}
+              onFilterChange={handleTimeFilterChange}
+              allItems={items}
+            />
+
+            {/* Filtered Data Summary */}
+            <FilteredDataSummary 
+              filteredItems={filteredItems}
+              originalItems={items}
+              timeFilter={timeFilter}
+              processType="QualityControl"
+            />
+
             {/* Top Row - Status and Placeholder */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
               {/* Additional Information Container */}
-              <div className="lg:col-span-3">
-                <div className="bg-white rounded-lg shadow p-4 h-32">
+              <div className="xl:col-span-3">
+                <div className="bg-white rounded-lg shadow p-4 h-40">
                   <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
                   <div className="text-sm text-gray-500">
                     Announcements will show up here.
+                    All data is artificially injected.
                   </div>
                 </div>
               </div>
 
               {/* Status Info - Compact Top Right */}
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-lg shadow p-4 h-32">
-                  <h4 className="font-medium text-gray-700 mb-2">Status</h4>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <div className="flex justify-between">
-                      <span>Records:</span>
-                      <span className="font-medium">{items.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Updated:</span>
-                      <span className="font-medium text-xs">{lastUpdate.toLocaleTimeString()}</span>
+              <div className="xl:col-span-1">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-4 h-40 overflow-hidden">
+                  <h4 className="font-medium text-gray-700 mb-2 text-sm sm:text-base">Status</h4>
+                  <div className="text-xs sm:text-sm text-gray-600 space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="flex-shrink-0">Records:</span>
+                      <span className="font-medium text-right truncate ml-1">
+                        {filteredItemsInfo.isFiltered 
+                          ? `${filteredItemsInfo.filtered}/${filteredItemsInfo.total}` 
+                          : filteredItemsInfo.total
+                        }
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Refresh:</span>
-                      <span className="font-medium flex items-center gap-1 text-xs">
+                      <span className="flex-shrink-0">Range:</span>
+                      <span className="font-medium text-xs text-right truncate ml-1">
+                        {filteredItemsInfo.timeRange}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="flex-shrink-0">Updated:</span>
+                      <span className="font-medium text-xs text-right truncate ml-1">{lastUpdate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="flex-shrink-0">Refresh:</span>
+                      <span className="font-medium flex items-center justify-end gap-1 text-xs ml-1">
                         {loading && (
-                          <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500"></div>
+                          <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500 flex-shrink-0"></div>
                         )}
-                        {REFRESH_INTERVAL_SECONDS}s
+                        <span className="truncate">{REFRESH_INTERVAL_SECONDS}s</span>
                       </span>
                     </div>
                   </div>
@@ -222,57 +275,86 @@ function QualityControlDashboard({ user, onLogout }) {
 
             {/* Latest Sensor Values */}
             <LatestSensorValues 
-              items={items} 
+              items={filteredItems} 
               onNavigateToLiveSensors={switchToLiveSensors}
             />
 
             {/* Charts Section */}
             <QualityControlChart 
-              items={items.filter(item => item.processType === 'QualityControl')}
+              items={filteredItems.filter(item => item.processType === 'QualityControl')}
+              timeFilter={timeFilter}
+              timeRange={filteredItemsInfo.timeRange}
             />
 
             {/* Table Section */}
             <DataTable 
-              items={items.filter(item => item.processType === 'QualityControl')}
+              items={filteredItems.filter(item => item.processType === 'QualityControl')}
               columns={tableColumns}
-              filename="quality_control_data"
+              filename={`quality_control_data_${timeFilter !== 'all' ? timeFilter : 'all_time'}`}
             />
           </div>
         ) : (
           /* Live Sensors View */
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
+            {/* Time Filter */}
+            <TimeFilter 
+              selectedFilter={timeFilter}
+              onFilterChange={handleTimeFilterChange}
+              allItems={items}
+            />
+
+            {/* Filtered Data Summary */}
+            <FilteredDataSummary 
+              filteredItems={filteredItems}
+              originalItems={items}
+              timeFilter={timeFilter}
+              processType="QualityControl"
+            />
+
             {/* Top Row - Status and Placeholder */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 xl:grid-cols-4 gap-4 sm:gap-6">
               {/* Additional Information Container */}
-              <div className="lg:col-span-3">
-                <div className="bg-white rounded-lg shadow p-4 h-32">
+              <div className="xl:col-span-3">
+                <div className="bg-white rounded-lg shadow p-4 h-40">
                   <h4 className="font-medium text-gray-700 mb-2">Additional Information</h4>
                   <div className="text-sm text-gray-500">
-                    This section is reserved for future functionality and enhancements.
+                    Announcements will show up here.
+                    <b>Note:</b>All data is artificially injected.
                   </div>
                 </div>
               </div>
 
               {/* Status Info - Compact Top Right */}
-              <div className="lg:col-span-1">
-                <div className="bg-white rounded-lg shadow p-4 h-32">
-                  <h4 className="font-medium text-gray-700 mb-2">Status</h4>
-                  <div className="text-sm text-gray-600 space-y-1">
-                    <div className="flex justify-between">
-                      <span>Records:</span>
-                      <span className="font-medium">{items.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Updated:</span>
-                      <span className="font-medium text-xs">{lastUpdate.toLocaleTimeString()}</span>
+              <div className="xl:col-span-1">
+                <div className="bg-white rounded-lg shadow p-3 sm:p-4 h-40 overflow-hidden">
+                  <h4 className="font-medium text-gray-700 mb-2 text-sm sm:text-base">Status</h4>
+                  <div className="text-xs sm:text-sm text-gray-600 space-y-1.5">
+                    <div className="flex justify-between items-center">
+                      <span className="flex-shrink-0">Records:</span>
+                      <span className="font-medium text-right truncate ml-1">
+                        {filteredItemsInfo.isFiltered 
+                          ? `${filteredItemsInfo.filtered}/${filteredItemsInfo.total}` 
+                          : filteredItemsInfo.total
+                        }
+                      </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span>Refresh:</span>
-                      <span className="font-medium flex items-center gap-1 text-xs">
+                      <span className="flex-shrink-0">Range:</span>
+                      <span className="font-medium text-xs text-right truncate ml-1">
+                        {filteredItemsInfo.timeRange}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="flex-shrink-0">Updated:</span>
+                      <span className="font-medium text-xs text-right truncate ml-1">{lastUpdate.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="flex-shrink-0">Refresh:</span>
+                      <span className="font-medium flex items-center justify-end gap-1 text-xs ml-1">
                         {loading && (
-                          <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500"></div>
+                          <div className="animate-spin rounded-full h-3 w-3 border-t-2 border-b-2 border-blue-500 flex-shrink-0"></div>
                         )}
-                        {REFRESH_INTERVAL_SECONDS}s
+                        <span className="truncate">{REFRESH_INTERVAL_SECONDS}s</span>
                       </span>
                     </div>
                   </div>
@@ -282,12 +364,13 @@ function QualityControlDashboard({ user, onLogout }) {
 
             {/* Latest Quality Metrics */}
             <LatestQualityMetrics 
-              items={items.filter(item => item.processType === 'QualityControl')} 
+              items={filteredItems.filter(item => item.processType === 'QualityControl')} 
               onViewAnalytics={switchToAnalytics}
+              timeFilter={timeFilter}
             />
 
             {/* Live Sensor Chart Section */}
-            <LiveSensorChart items={items} />
+            <LiveSensorChart items={filteredItems} />
           </div>
         )}
       </div>

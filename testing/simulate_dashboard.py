@@ -19,9 +19,9 @@ import time
 # API Configuration
 API_BASE_URL = "http://localhost:5050/api"
 REQUEST_INTERVAL_SECONDS = 1
-TOTAL_RECORDS = 100
+TOTAL_RECORDS = 1000
 START_PRODUCT_ID = 1000
-TIME_RANGE_DAYS = 30
+TIME_RANGE_DAYS = 45
 
 # =============================================================================
 # SENSOR RANGES AND DEVICE SOURCES
@@ -31,6 +31,7 @@ TIME_RANGE_DAYS = 30
 SQUEEGEE_SPEED_RANGE = (25.0, 55.0)  # mm/s
 PRINT_PRESSURE_RANGE = (800.0, 1200.0)  # N/m²
 INK_VISCOSITY_RANGE = (15.0, 35.0)  # cP
+HUMIDITY_RANGE = (40.0, 60.0)  # %
 
 # Streeting sensor ranges  
 TEMPERATURE_RANGE = (30.0, 40.0)  # °C
@@ -41,6 +42,7 @@ DEVICE_SOURCES = {
     'squeegeeSpeed': 'clicker',
     'printPressure': 'load_cell', 
     'inkViscosity': 'viscometer',
+    'humidity': 'humidity_sensor',
     'temperature': 'thermometer',
     'speed': 'encoder'
 }
@@ -50,7 +52,7 @@ DEVICE_SOURCES = {
 # =============================================================================
 
 # QC Operators
-QC_OPERATORS = ['Mudit', 'Raj', 'Manav']
+QC_OPERATORS = ['Inspector 1', 'Inspector 2', 'Inspector 3']
 
 # QC Process Stations
 QC_PROCESS_STATIONS = ['Silvering', 'Streeting', 'Final Product check']
@@ -217,6 +219,11 @@ def generate_comprehensive_record(record_id):
             "value": round(random.uniform(*INK_VISCOSITY_RANGE), 1),
             "unit": "cP",
             "deviceSource": DEVICE_SOURCES['inkViscosity']
+        },
+        "humidity": {
+            "value": round(random.uniform(*HUMIDITY_RANGE), 1),
+            "unit": "%",
+            "deviceSource": DEVICE_SOURCES['humidity']
         },
         
         # Streeting sensor data
