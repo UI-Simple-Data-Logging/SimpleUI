@@ -4,12 +4,10 @@ import {
 } from 'recharts';
 
 // Fixed Y-axis constants for temperature (positive)
-const TEMP_Y_MIN = 0;
 const TEMP_Y_MAX = 100;
 
 // Fixed Y-axis constants for speed (negative)
 const SPEED_Y_MIN = -100;
-const SPEED_Y_MAX = 0;
 
 function StreetingChart({ items }) {
   const chartData = items
