@@ -41,11 +41,8 @@ cd SimpleUI
 cd backend
 npm install
 
-# Create a .env file based on the provided example
-cp .env.example .env
-
 # Start backend server
-npm run dev
+npm start
 ```
 
 ### 💻 Frontend Setup
@@ -54,33 +51,9 @@ npm run dev
 cd ../frontend
 npm install
 
-# Create a .env file for React
-cp .env.example .env
 
 # Start frontend
 npm start
 ```
 
 ---
-
-## 🗂️ Environment Variables
-
-### 📍 `frontend/.env.example`
-
-```env
-REACT_APP_API_BASE_URL=http://localhost:5050/api
-```
-
-### 📍 `backend/.env.example`
-
-```env
-MONGO_URI=your_mongodb_connection_string
-PORT=5050
-```
-
----
-
-## 📸 Preview
-
-> Add a screenshot here later:
-> `![UI Preview](./screenshots/preview.png)`
