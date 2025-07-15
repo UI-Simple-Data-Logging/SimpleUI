@@ -1,0 +1,2 @@
+# Python dependencies for test data injection scripts
+requests>=2.28.0
